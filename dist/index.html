@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Project Athena - Adaclare</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('dropdownMenu');
+      menu.classList.toggle('hidden');
+    }
+  
+    function toggleTheme() {
+      const body = document.body;
+      body.classList.toggle('light-gradient');
+      body.classList.toggle('dark-gradient');
+  
+      // Dropdown
+      const dropdown = document.getElementById('dropdownMenu');
+      dropdown.classList.toggle('bg-white');
+      dropdown.classList.toggle('bg-gray-800');
+      dropdown.classList.toggle('text-gray-700');
+      dropdown.classList.toggle('text-white');
+  
+      // Assistant Box
+      const callBox = document.getElementById('callBox');
+      callBox.classList.toggle('bg-white');
+      callBox.classList.toggle('bg-gray-900');
+      callBox.classList.toggle('text-white');
+      callBox.classList.toggle('text-gray-200');
+  
+      // Music Box
+      const musicBox = document.getElementById('musicBox');
+      musicBox.classList.toggle('bg-white');
+      musicBox.classList.toggle('bg-gray-900');
+      musicBox.classList.toggle('text-white');
+      musicBox.classList.toggle('text-gray-200');
+    }
+    function toggleVolumeDropdown() {
+  const volumeMenu = document.getElementById('volumeDropdown');
+  volumeMenu.classList.toggle('hidden');
+}
+
+  </script>
+  
+     <style>
+        .light-gradient {
+            background: linear-gradient(to right, #c3b5f4, #fcb4b4, #faeb8d);
+        }
+        .dark-gradient {
+            background: linear-gradient(to right, #2d2d2d, #383838, #505050);
+        }
+    
+        .dark-gradient .hover\:bg-gray-100:hover {
+  background-color: #4b5563 !important; /* Darker hover for dark mode */
+}
+
+    </style>
+</head>
+<body class="light-gradient min-h-screen overflow-hidden flex flex-col">
+
+  <!-- Top Bar -->
+  <div class="flex justify-between items-center p-4">
+    <div class="flex items-center space-x-3">
+        <!-- Connected Badge -->
+        <button class="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600 cursor-default">
+            ● Connected
+        </button>
+    
+      <!-- Wi-Fi & Volume Controls -->
+<div class="flex items-center space-x-3 relative">
+
+    <!-- Wi-Fi Icon Box -->
+    <div class="bg-gray-800 text-white p-2 rounded shadow hover:bg-gray-100 cursor-default shadow hover:bg-gray-700">
+      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1">
+        <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+        <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+  
+    <!-- Volume Button -->
+    <div class="relative">
+      <button onclick="toggleVolumeDropdown()" class="bg-gray-800 text-white p-2 rounded shadow hover:bg-gray-100 cursor-default shadow hover:bg-gray-700">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+      </button>
+  
+      <!-- Volume Slider Dropdown -->
+      <div id="volumeDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg p-4 z-10">
+        <label for="volume" class="block text-sm font-medium text-gray-700 mb-2">Volume</label>
+        <input type="range" id="volume" name="volume" min="0" max="100" class="w-full">
+      </div>
+    </div>
+  
+</div> </div>
+  
+    <div class="flex items-center space-x-2">
+              
+              <span class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+                03:11 PM
+            </span>
+              <a href="/home" class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+
+                <!-- Return Icon -->
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                
+            </a>
+    
+      <!-- Menu Dropdown -->
+      <div class="relative inline-block text-left">
+        <button onclick="toggleDropdown()" class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+          ☰
+        </button>
+        <div id="dropdownMenu" class="absolute right-0 top-full mt-2 w-64 bg-white rounded-md shadow-lg hidden z-10 p-4">
+          <div class="grid grid-cols-3 gap-4 text-center text-gray-700">
+            <!-- Settings -->
+            <a href="/settings" class="flex flex-col items-center hover:bg-gray-100 p-2 rounded">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 
+                         1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 
+                         0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 
+                         001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33h.09a1.65 
+                         1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51h.09a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 
+                         012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v.09a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 
+                         0 00-1.51 1z" />
+              </svg>
+              <span class="text-sm mt-1">Settings</span>
+            </a>
+
+            <!-- Memory -->
+            <a href="#" class="flex flex-col items-center hover:bg-gray-100 p-2 rounded">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <line x1="22" y1="12" x2="2" y2="12" />
+                <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 
+                         00-1.79 1.11z" />
+              </svg>
+              <span class="text-sm mt-1">Memory</span>
+            </a>
+            <a onclick="toggleTheme()" class="flex flex-col items-center hover:bg-gray-100 p-2 rounded">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <span class="text-sm mt-1">Toggle</span> 
+            </a>
+            <!-- Exit -->
+            <a href="/close" class="flex flex-col items-center hover:bg-gray-100 p-2 rounded">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M18.36 6.64a9 9 0 11-12.73 0" />
+                <line x1="12" y1="2" x2="12" y2="12" />
+              </svg>
+              <span class="text-sm mt-1">Exit</span>
+            </a>
+
+        
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="flex-grow p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch overflow-y-auto max-h-[calc(100vh-80px)]">
+
+
+
+    <!-- Assistant Box -->
+    <div id="callBox" class="bg-black bg-opacity-60 rounded-2xl shadow-xl p-6 flex flex-col items-center text-white justify-center text-center space-y-4 min-h-[18rem]">
+        
+      <img src="/static/assistant_base.png" alt="Assistant" class="w-64 h-64 rounded-full" />
+      <h2 class="text-lg md:text-xl font-semibold">Athena</h2>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/chat" class="flex items-center gap-2 bg-white text-gray-800 px-4 py-2 rounded shadow hover:bg-gray-100 text-sm md:text-base">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+          </svg>
+          Message
+        </a>
+        <a href="/call" class="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600 text-sm md:text-base">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M22 16.92v3a2 2 0 01-2.18 2A19.86 19.86 0 013 5.18 2 2 0 015 3h3a2 2 0 012 1.72 
+                     12.05 12.05 0 00.6 2.65 2 2 0 01-.45 2.11L9 11a16 16 0 006 6l1.52-1.15a2 2 0 
+                     012.11-.45 12.05 12.05 0 002.65.6A2 2 0 0122 16.92z" />
+          </svg>
+          Call
+        </a>
+      </div>
+    </div>
+
+<!-- Music Box -->
+<div id="musicBox" class="bg-black bg-opacity-60 rounded-2xl shadow-xl p-6 flex flex-col items-center text-white justify-center text-center space-y-4 min-h-[18rem]">
+
+    <ul class="space-y-3 w-full text-base text-gray-700">
+        <li class="bg-gray-100 hover:bg-gray-200 py-3 px-4 rounded cursor-pointer text-center w-full flex items-center gap-3"><svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg> <span>Music</span></li>
+        <li class="bg-gray-100 hover:bg-gray-200 py-3 px-4 rounded cursor-pointer text-center w-full flex items-center gap-3"><svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> <span>Navigation</span></li>
+        <li class="w-full">
+            <a href="/settings" class="flex items-center gap-3 py-3 px-4 rounded bg-gray-100 hover:bg-gray-200 text-center cursor-pointer">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 
+                         1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83
+                         l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82
+                         l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 
+                         1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21
+                         a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              <span>Settings</span>
+            </a>
+          </li>
+            
+    </ul>
+      
+  </div>
+  
+  </div>
+</body>
+</html>

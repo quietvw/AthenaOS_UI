@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Loading - Project Athena</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    setTimeout(() => {
+      window.location.href = "/home"; // Change to your destination like /call
+    }, 8000);
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-black flex items-center justify-center min-h-screen text-white">
+  <div class="text-center space-y-8">
+    <!-- Logo -->
+    <img src="/static/adaclare.png" alt="Assistant Logo" class="w-[300px] mx-auto rounded-lg shadow-lg">
+
+
+    <!-- Loading Text -->
+    <p class="text-lg tracking-wider text-gray-300 animate-pulse">Starting Project Athena...</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Project Athena - Adaclare</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('dropdownMenu');
+      menu.classList.toggle('hidden');
+    }
+
+    function toggleTheme() {
+      const body = document.body;
+      body.classList.toggle('light-gradient');
+      body.classList.toggle('dark-gradient');
+
+      const dropdown = document.getElementById('dropdownMenu');
+      dropdown.classList.toggle('bg-white');
+      dropdown.classList.toggle('bg-gray-800');
+      dropdown.classList.toggle('text-gray-700');
+      dropdown.classList.toggle('text-white');
+
+      const callBox = document.getElementById('callBox');
+      callBox?.classList.toggle('bg-white');
+      callBox?.classList.toggle('bg-gray-900');
+      callBox?.classList.toggle('text-white');
+      callBox?.classList.toggle('text-gray-200');
+
+      const musicBox = document.getElementById('musicBox');
+      musicBox?.classList.toggle('bg-white');
+      musicBox?.classList.toggle('bg-gray-900');
+      musicBox?.classList.toggle('text-black');
+      musicBox?.classList.toggle('text-gray-200');
+    }
+
+    function toggleVolumeDropdown() {
+      const volumeMenu = document.getElementById('volumeDropdown');
+      volumeMenu.classList.toggle('hidden');
+    }
+  </script>
+  <style>
+    .light-gradient {
+      background: linear-gradient(to right, #c3b5f4, #fcb4b4, #faeb8d);
+    }
+    .dark-gradient {
+      background: linear-gradient(to right, #2d2d2d, #383838, #505050);
+    }
+    .dark-gradient .hover\:bg-gray-100:hover {
+      background-color: #4b5563 !important;
+    }
+  </style>
+<script>
+    let wifiEnabled = false;
+  
+    function toggleWifi() {
+      wifiEnabled = !wifiEnabled;
+  
+      const toggle = document.getElementById("wifiToggle");
+      const thumb = document.getElementById("wifiThumb");
+      const label = document.getElementById("wifiLabel");
+  
+      if (wifiEnabled) {
+        toggle.classList.remove("bg-gray-300");
+        toggle.classList.add("bg-blue-500");
+        thumb.style.left = "100%";
+        thumb.style.transform = "translateX(-100%)";
+        label.textContent = "WiFi On";
+      } else {
+        toggle.classList.remove("bg-blue-500");
+        toggle.classList.add("bg-gray-300");
+        thumb.style.left = "0";
+        thumb.style.transform = "translateX(0)";
+        label.textContent = "WiFi Off";
+      }
+    }
+  </script>
+  
+  
+</head>
+<body class="light-gradient min-h-screen overflow-hidden flex flex-col">
+
+ <!-- Top Bar with Connected Badge, Dropdown Menu, and Return Home Button -->
+ <div class="flex justify-between items-center p-4">
+    <!-- Connected Badge -->
+    <div class="flex items-center space-x-3">
+        <!-- Connected Badge -->
+        <button class="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600 cursor-default">
+            ● Connected
+        </button>
+    
+      <!-- Wi-Fi & Volume Controls -->
+      <div class="flex items-center space-x-3 relative">
+
+        <!-- Wi-Fi Icon Box -->
+        <div class="bg-gray-800 text-white p-2 rounded shadow hover:bg-gray-100 cursor-default shadow hover:bg-gray-700">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+            <line x1="12" y1="20" x2="12.01" y2="20"></line>
+          </svg>
+        </div>
+      
+        <!-- Volume Button -->
+        <div class="relative">
+          <button onclick="toggleVolumeDropdown()" class="bg-gray-800 text-white p-2 rounded shadow hover:bg-gray-100 cursor-default shadow hover:bg-gray-700">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          </button>
+      
+          <!-- Volume Slider Dropdown -->
+          <div id="volumeDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg p-4 z-10">
+            <label for="volume" class="block text-sm font-medium text-gray-700 mb-2">Volume</label>
+            <input type="range" id="volume" name="volume" min="0" max="100" class="w-full">
+          </div>
+        </div>
+      
+    </div> </div>
+  
+
+    <!-- Menu Dropdown and Return Home Button -->
+    <div class="flex items-center space-x-2">
+        <span class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+            03:11 PM
+        </span>
+        <!-- Return Home Button -->
+        <a href="/home" class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+
+            <!-- Return Icon -->
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            
+        </a>
+        
+             
+
+        <!-- Menu Dropdown -->
+        <div class="relative inline-block text-left">
+            <button onclick="toggleDropdown()" class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+                ☰
+            </button>
+            <!-- Updated Grid Menu Dropdown -->
+            <div id="dropdownMenu" class="absolute right-0 top-full mt-2 w-64 bg-white rounded-md shadow-lg hidden z-10 p-4">
+                <div class="grid grid-cols-3 gap-4 text-center text-gray-700">
+                    <!-- Settings -->
+                    <a href="/settings" class="flex flex-col items-center hover:bg-gray-100 p-2 rounded">
+                        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        <span class="text-sm mt-1">Settings</span>
+                    </a>
+
+                    <!-- Memory -->
+                    <a href="#" class="flex flex-col items-center hover:bg-gray-100 p-2 rounded">
+                        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"></line><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path><line x1="6" y1="16" x2="6.01" y2="16"></line><line x1="10" y1="16" x2="10.01" y2="16"></line></svg>
+                        <span class="text-sm mt-1">Memory</span>
+                    </a>
+                    <a onclick="toggleTheme()" class="flex flex-col items-center hover:bg-gray-100 p-2 rounded">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        <span class="text-sm mt-1">Toggle</span> 
+                    </a>
+                    <!-- Exit -->
+                    <a href="/close" class="flex flex-col items-center hover:bg-gray-100 p-2 rounded">
+                        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                        <span class="text-sm mt-1">Exit</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+  <!-- Main Content -->
+  <div class="flex-grow p-4 grid grid-cols-12 gap-4 max-h-[calc(100vh-80px)]">
+    <!-- Sidebar -->
+    <aside class="col-span-3 bg-gray-100 p-4 rounded-xl shadow-xl" id="callBox">
+      <nav class="flex flex-col space-y-2">
+        <a href="/settings" class="text-left p-2 rounded-lg hover:bg-gray-200 transition-all flex items-center space-x-2">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33A1.65 1.65 0 0 0 14 21v.09a2 2 0 1 1-4 0V21a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L4.2 6.2a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20 9h.09a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>General</span>
+        </a>
+        <a href="/settings_wifi" class="text-left p-2 rounded-lg hover:bg-gray-200 transition-all flex items-center space-x-2">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+            <span>Wi-Fi Settings</span>
+          </a>
+          <button class="text-left p-2 rounded-lg hover:bg-gray-200 transition-all flex items-center space-x-2">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>Date/Time Settings</span>
+          </button>
+          <button class="text-left p-2 rounded-lg hover:bg-gray-200 transition-all flex items-center space-x-2">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+            <span>Server Settings</span>
+          </button>
+          <button class="text-left p-2 rounded-lg hover:bg-gray-200 transition-all flex items-center space-x-2">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+            <span>Spotify Integration</span>
+          </button>
+          <button class="text-left p-2 rounded-lg hover:bg-gray-200 transition-all flex items-center space-x-2">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+            <span>Developer Settings</span>
+          </button>
+          <button class="text-left p-2 rounded-lg hover:bg-gray-200 transition-all flex items-center space-x-2">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>About</span>
+          </button>
+      </nav>
+    </aside>
+
+    <!-- Form Content -->
+    <main class="col-span-9 p-6 bg-gray-100 rounded-xl shadow-xl overflow-y-auto" id="musicBox">
+
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="text-2xl font-semibold">Wi-Fi Settings</h1>
+              
+             <!-- Toggle Switch -->
+<div class="flex items-center gap-2 cursor-pointer select-none" style="padding-left:10px;" onclick="toggleWifi()">
+    <div id="wifiToggle" class="w-12 h-6 bg-gray-300 rounded-full relative transition-colors duration-300">
+      <div id="wifiThumb" class="w-6 h-6 bg-white rounded-full shadow-md absolute left-0 top-0 transition-all duration-300"></div>
+    </div>
+   
+  </div>
+  
+              </div>
+              
+            <button 
+              class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            >
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+              Refresh
+            </button>
+          </div>
+        
+            <!-- Available Networks -->
+            <div class="space-y-4">
+                <div class="border rounded-lg p-4 flex justify-between items-center hover:shadow-md">
+                    <div>
+                      <div class="flex items-center gap-2 text-lg font-medium">
+                        <!-- Lock Icon -->
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        AthenaNet
+                      </div>
+                      <p class="text-sm text-gray-500">Secure network <span style="color:green;">Connected</span></p>
+                    </div>
+               
+                    <button class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                      Disconnect
+                    </button>
+                  </div>
+                  
+                  <div class="border rounded-lg p-4 flex justify-between items-center hover:shadow-md">
+                    <div>
+                      <div class="flex items-center gap-2 text-lg font-medium">
+                        <!-- Lock Icon -->
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                        Guest Network
+                      </div>
+                      <p class="text-sm text-gray-500">Non-Secure network</p>
+                    </div>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                      Connect
+                    </button>
+                  </div>
+
+                  <div class="border rounded-lg p-4 flex justify-between items-center hover:shadow-md">
+                    <div>
+                      <div class="flex items-center gap-2 text-lg font-medium">
+                        <!-- Lock Icon -->
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                        Hidden Network
+                      </div>
+                      <p class="text-sm text-gray-500">Connect to a hidden network</p>
+                    </div>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                      Connect
+                    </button>
+                  </div>
+                  
+        
+            
+            </div>
+          
+    </main>
+  </div>
+
+</body>
+</html>
