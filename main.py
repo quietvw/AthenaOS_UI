@@ -50,4 +50,4 @@ def close_window(*args, **kwargs):
 if __name__ == "__main__":
 
     FlaskUI(app=app, server="fastapi",width=960,
-            height=640).run()
+            height=640, port=15500).run()
