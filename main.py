@@ -18,7 +18,7 @@ app.mount("/static", StaticFiles(directory="dist/static/"))
 
 @app.get("/", response_class=HTMLResponse)
 async def splash(request: Request):
-    return templates.TemplateResponse("time_settings.html", {"request": request})
+    return templates.TemplateResponse("splash.html", {"request": request})
 
 @app.get("/home", response_class=HTMLResponse)
 async def home(request: Request):
