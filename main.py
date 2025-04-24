@@ -18,7 +18,7 @@ app.mount("/static", StaticFiles(directory="dist/static/"))
 
 @app.get("/", response_class=HTMLResponse)
 async def splash(request: Request):
-    return templates.TemplateResponse("splash.html", {"request": request})
+    return templates.TemplateResponse("time_settings.html", {"request": request})
 
 @app.get("/home", response_class=HTMLResponse)
 async def home(request: Request):
@@ -40,6 +40,10 @@ async def settings(request: Request):
 @app.get("/settings_wifi", response_class=HTMLResponse)
 async def wifi(request: Request):
     return templates.TemplateResponse("wifi_settings.html", {"request": request})
+
+@app.get("/settings_time", response_class=HTMLResponse)
+async def wifi(request: Request):
+    return templates.TemplateResponse("time_settings.html", {"request": request})
 
 @app.route("/close", methods=["GET"])
 def close_window(*args, **kwargs):
