@@ -24,6 +24,11 @@ async def splash(request: Request):
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/lock", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("pin_protect.html", {"request": request})
+
+
 @app.get("/music", response_class=HTMLResponse)
 async def music(request: Request):
     return templates.TemplateResponse("music.html", {"request": request})
