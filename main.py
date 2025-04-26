@@ -172,7 +172,7 @@ def upgrade_process():
 @app.route("/upgrade_logs")
 def upgrade_logs():
     global upgrade_log
-    return {"logs": upgrade_log}
+    return jsonify({"logs": upgrade_log})
 
 @app.route("/music")
 def music():

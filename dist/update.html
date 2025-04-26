@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>System Update</title>
+  <title>AthenaOS System Update</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* Marquee animation for progress */
@@ -32,55 +32,58 @@
     }
   </style>
 </head>
+
 <body class="flex items-center justify-center min-h-screen bg-black p-6">
 
-  <div class="bg-black bg-opacity-60 rounded-2xl shadow-xl p-6 flex flex-col text-white space-y-4 min-h-[18rem]">
+  <div class="bg-black bg-opacity-60 rounded-2xl shadow-xl p-6 flex flex-col text-white space-y-4 min-h-[20rem] w-full max-w-3xl">
     
     <div class="flex flex-col items-center space-y-4">
       <div class="bg-white p-3 rounded-full">
-        <svg viewBox="0 0 24 24" width="36" height="36" stroke="black" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+        <svg viewBox="0 0 24 24" width="36" height="36" stroke="black" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="23 4 23 10 17 10"></polyline>
           <polyline points="1 20 1 14 7 14"></polyline>
           <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
         </svg>
       </div>
-      <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">AthenaOS Update in Progress</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
-        Please do not turn off your device.<br>Your device will reboot automatically.
+
+      <h1 class="text-2xl font-bold text-gray-100">AthenaOS Update in Progress</h1>
+      <p class="text-sm text-gray-400 text-center">
+        Please do not turn off your device.<br>Your device will reboot automatically when done.
       </p>
     </div>
 
-    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden relative">
-      <div class="absolute inset-0 bg-orange-500 h-full rounded-full marquee"></div> <!-- Marquee animated bar -->
+    <!-- Progress bar -->
+    <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-4 overflow-hidden relative">
+      <div class="absolute inset-0 bg-orange-500 h-full rounded-full marquee"></div>
     </div>
 
-    <div class="flex justify-end text-xs text-gray-400 dark:text-gray-500">
+    <!-- Commit Info -->
+    <div class="flex justify-end text-xs text-gray-400">
       <span>Commit: {{ commit }}</span>
     </div>
 
- 
-
     <!-- Terminal Log -->
-    <div id="terminalLog" class="bg-black text-white font-mono text-xs rounded-md p-4 h-48 overflow-y-auto shadow-inner space-y-1 ">
-      <pre id="terminalOutput"></pre>
+    <div id="terminalLog" class="bg-black text-white font-mono text-xs rounded-md p-4 h-48 overflow-y-auto shadow-inner">
+      <pre id="terminalOutput" class="whitespace-pre-wrap break-words"></pre>
     </div>
 
   </div>
 
+  <!-- Live Log Fetching -->
   <script>
     function fetchLogs() {
-        fetch('/upgrade_logs')
-            .then(response => response.json())
-            .then(data => {
-                const terminal = document.getElementById('terminalOutput');
-                terminal.innerText = data.logs.join('\n');
-                terminal.scrollTop = terminal.scrollHeight; // auto scroll to bottom
-            })
-            .catch(error => console.error('Error fetching logs:', error));
+      fetch('/upgrade_logs')
+        .then(response => response.json())
+        .then(data => {
+          const terminal = document.getElementById('terminalOutput');
+          terminal.innerText = data.logs.join('\n');
+          terminal.scrollTop = terminal.scrollHeight; // Auto-scroll to bottom
+        })
+        .catch(error => console.error('Error fetching logs:', error));
     }
-    
-    setInterval(fetchLogs, 1000); // Fetch logs every second
-    </script>
+
+    setInterval(fetchLogs, 1000); // Update logs every second
+  </script>
 
 </body>
 </html>
