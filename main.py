@@ -118,15 +118,34 @@ def settings_wifi():
 @app.route("/settings_about")
 def settings_about():
     try:
-        # Run git command in the AthenaOS_UI repo
+        # Get current running commit (local repo HEAD)
         commit_hash = subprocess.check_output(
-            ['git', 'rev-parse', 'HEAD'], 
-            cwd='/home/athenaos/AthenaOS_UI'  # set working directory
+            ['git', 'rev-parse', 'HEAD'],
+            cwd='/home/athenaos/AthenaOS_UI'
         ).decode('utf-8').strip()
+
+        # Fetch latest from origin
+        subprocess.check_call(
+            ['git', 'fetch'],
+            cwd='/home/athenaos/AthenaOS_UI'
+        )
+
+        # Get latest commit from remote (origin/main)
+        latest_commit_hash = subprocess.check_output(
+            ['git', 'rev-parse', 'origin/main'],
+            cwd='/home/athenaos/AthenaOS_UI'
+        ).decode('utf-8').strip()
+
     except Exception as e:
-        print(f"Error getting commit: {e}")
+        print(f"Error getting git commit info: {e}")
         commit_hash = "Unknown"
-    return render_template("setting_software.html", commit_hash=commit_hash)
+        latest_commit_hash = "Unknown"
+
+    return render_template(
+        "setting_software.html", 
+        commit_hash=commit_hash, 
+        latest_commit_hash=latest_commit_hash
+    )
 
 
 @app.route("/settings_time")
