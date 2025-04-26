@@ -69,19 +69,19 @@ def fetch_weather(zip_code):
 
 @app.route("/")
 def splash():
-    return render_template("splash.html", message="Starting AthenaOS...")
+    return render_template("splash.html", message="Starting AthenaOS...", href="/lock")
 
 @app.route("/reboot")
 def splash_reboot():
     # Start reboot after small delay, so page can render first
     threading.Thread(target=delayed_command, args=(["reboot"],)).start()
-    return render_template("splash.html", message="AthenaOS is rebooting...")
+    return render_template("splash.html", message="AthenaOS is rebooting...", href="/reboot")
 
 @app.route("/shutdown")
 def splash_shutdown():
     # Start shutdown after small delay, so page can render first
     threading.Thread(target=delayed_command, args=(["shutdown", "now"],)).start()
-    return render_template("splash.html", message="AthenaOS is shutting down...")
+    return render_template("splash.html", message="AthenaOS is shutting down...", href="/shutdown")
 
 def delayed_command(cmd):
     time.sleep(2)  # Wait 2 seconds to allow the page to render
