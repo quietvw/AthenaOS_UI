@@ -117,7 +117,7 @@ def background_upgrade():
     except subprocess.CalledProcessError as e:
         upgrade_log.append(f"Error during update: {e}")
 
-@app.route("/force_update", methods=["POST"])
+@app.route("/force_update", methods=["GET"])
 def force_update():
     global upgrading_to_commit, upgrade_log
     upgrade_log = []  # clear previous logs
