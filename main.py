@@ -66,7 +66,23 @@ def fetch_weather(zip_code):
 
 @app.route("/")
 def splash():
-    return render_template("splash.html")
+    return render_template("splash.html", message="Starting AthenaOS...")
+
+@app.route("/reboot")
+def splash_reboot():
+    # Start reboot after small delay, so page can render first
+    threading.Thread(target=delayed_command, args=(["reboot"],)).start()
+    return render_template("splash.html", message="AthenaOS is rebooting...")
+
+@app.route("/shutdown")
+def splash_shutdown():
+    # Start shutdown after small delay, so page can render first
+    threading.Thread(target=delayed_command, args=(["shutdown", "now"],)).start()
+    return render_template("splash.html", message="AthenaOS is shutting down...")
+
+def delayed_command(cmd):
+    time.sleep(2)  # Wait 2 seconds to allow the page to render
+    subprocess.run(cmd)
 
 @app.route("/home")
 def home():
@@ -95,6 +111,20 @@ def settings():
 @app.route("/settings_wifi")
 def settings_wifi():
     return render_template("wifi_settings.html")
+
+@app.route("/settings_about")
+def settings_about():
+    try:
+        # Run git command in the AthenaOS_UI repo
+        commit_hash = subprocess.check_output(
+            ['git', 'rev-parse', 'HEAD'], 
+            cwd='/home/athenaos/AthenaOS_UI'  # set working directory
+        ).decode('utf-8').strip()
+    except Exception as e:
+        print(f"Error getting commit: {e}")
+        commit_hash = "Unknown"
+    return render_template("setting_software.html", commit_hash=commit_hash)
+
 
 @app.route("/settings_time")
 def settings_time():

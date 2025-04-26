@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="flex-grow p-4 grid grid-cols-12 gap-4 max-h-[calc(100vh-80px)]">
+  <!-- Sidebar -->
+  {% include "settings_menu.html" %}
+
+  <!-- About Content -->
+  <main class="col-span-9 p-6 bg-gray-100 rounded-xl shadow-xl overflow-y-auto" id="aboutBox">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-bold">About Project Athena</h1>
+      <button 
+        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition"
+        onclick="forceUpdate()">
+        Force Update
+      </button>
+    </div>
+
+    <!-- Force Update Status Box -->
+    <div id="updateStatus" class="hidden mb-6 p-4 rounded-lg text-white text-center font-semibold"></div>
+
+    <div class="space-y-8 max-w-4xl">
+      <section>
+        <h2 class="text-2xl font-semibold mb-2">Overview</h2>
+        <p>
+          Project Athena is a modern, lightweight interface designed for seamless interaction with music, chat, calls, settings, and live weather updates — all in one unified experience.
+        </p>
+      </section>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl shadow">
+          <h3 class="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-300">Current Commit</h3>
+          <p class="text-gray-600 dark:text-gray-400 break-all">
+            {{ commit_hash }}
+          </p>
+        </section>
+      </div>
+
+      <section>
+        <h2 class="text-2xl font-semibold mb-2">License</h2>
+        <p>© 2025 Adaclare. All rights reserved.</p>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- Force Update Script -->
+<script>
+function forceUpdate() {
+  const statusBox = document.getElementById('updateStatus');
+  
+  // Show loading
+  statusBox.className = 'mb-6 p-4 rounded-lg text-white text-center font-semibold bg-blue-500';
+  statusBox.innerText = 'Updating...';
+  statusBox.classList.remove('hidden');
+
+  fetch('/update', { method: 'POST' })
+    .then(response => {
+      if (response.ok) {
+        statusBox.className = 'mb-6 p-4 rounded-lg text-white text-center font-semibold bg-green-500';
+        statusBox.innerText = 'Update triggered successfully!';
+      } else {
+        statusBox.className = 'mb-6 p-4 rounded-lg text-white text-center font-semibold bg-red-500';
+        statusBox.innerText = 'Failed to trigger update.';
+      }
+    })
+    .catch(error => {
+      console.error('Update error:', error);
+      statusBox.className = 'mb-6 p-4 rounded-lg text-white text-center font-semibold bg-red-500';
+      statusBox.innerText = 'Update failed.';
+    });
+}
+</script>
+
+{% endblock %}
