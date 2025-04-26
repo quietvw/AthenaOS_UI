@@ -55,26 +55,32 @@
     </div>
 
     <div class="flex justify-end text-xs text-gray-400 dark:text-gray-500">
-      <span>Commit: 4db8a7c</span>
+      <span>Commit: {{ commit }}</span>
     </div>
 
  
 
     <!-- Terminal Log -->
     <div id="terminalLog" class="bg-black text-white font-mono text-xs rounded-md p-4 h-48 overflow-y-auto shadow-inner space-y-1 ">
-      <pre>[10:15:23] Checking for updates...</pre>
-      <pre>[10:15:24] Update v2.3.1 found.</pre>
-      <pre>[10:15:25] Downloading files...</pre>
-      <pre>[10:15:45] Applying patch 1/5</pre>
-      <pre>[10:16:00] Applying patch 2/5</pre>
-      <pre>[10:16:15] Applying patch 3/5</pre>
-      <pre>[10:16:30] Verifying installation...</pre>
-      <pre>[10:16:45] Cleaning up temporary files...</pre>
+      <pre id="terminalOutput"></pre>
     </div>
 
   </div>
 
-
+  <script>
+    function fetchLogs() {
+        fetch('/upgrade_logs')
+            .then(response => response.json())
+            .then(data => {
+                const terminal = document.getElementById('terminalOutput');
+                terminal.innerText = data.logs.join('\n');
+                terminal.scrollTop = terminal.scrollHeight; // auto scroll to bottom
+            })
+            .catch(error => console.error('Error fetching logs:', error));
+    }
+    
+    setInterval(fetchLogs, 1000); // Fetch logs every second
+    </script>
 
 </body>
 </html>

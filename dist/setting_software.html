@@ -9,16 +9,14 @@
   <!-- About Content -->
   <main class="col-span-9 p-6 bg-gray-100 rounded-xl shadow-xl overflow-y-auto" id="aboutBox">
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-3xl font-bold">About Project Athena</h1>
-      <button 
+      <h1 class="text-3xl font-bold">About AthenaOS</h1>
+      <a 
         class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition"
-        onclick="forceUpdate()">
+        href="/force_update">
         Force Update
-      </button>
+    </a>
     </div>
 
-    <!-- Force Update Status Box -->
-    <div id="updateStatus" class="hidden mb-6 p-4 rounded-lg text-white text-center font-semibold"></div>
 
     <div class="space-y-8 max-w-4xl">
       <section>
@@ -51,32 +49,5 @@
   </main>
 </div>
 
-<!-- Force Update Script -->
-<script>
-function forceUpdate() {
-  const statusBox = document.getElementById('updateStatus');
-  
-  // Show loading
-  statusBox.className = 'mb-6 p-4 rounded-lg text-white text-center font-semibold bg-blue-500';
-  statusBox.innerText = 'Updating...';
-  statusBox.classList.remove('hidden');
-
-  fetch('/update', { method: 'POST' })
-    .then(response => {
-      if (response.ok) {
-        statusBox.className = 'mb-6 p-4 rounded-lg text-white text-center font-semibold bg-green-500';
-        statusBox.innerText = 'Update triggered successfully!';
-      } else {
-        statusBox.className = 'mb-6 p-4 rounded-lg text-white text-center font-semibold bg-red-500';
-        statusBox.innerText = 'Failed to trigger update.';
-      }
-    })
-    .catch(error => {
-      console.error('Update error:', error);
-      statusBox.className = 'mb-6 p-4 rounded-lg text-white text-center font-semibold bg-red-500';
-      statusBox.innerText = 'Update failed.';
-    });
-}
-</script>
 
 {% endblock %}

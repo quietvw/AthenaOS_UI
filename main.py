@@ -7,6 +7,9 @@ import subprocess
 import threading
 import time
 
+upgrade_log = []
+upgrading_to_commit = None
+
 app = Flask(__name__, static_folder="dist/static", template_folder="dist")
 
 weather_cache = {
@@ -94,6 +97,57 @@ def home():
 @app.route("/lock")
 def lock():
     return render_template("pin_protect.html")
+
+import subprocess
+import threading
+
+upgrade_log = []
+upgrading_to_commit = None
+
+def background_upgrade():
+    global upgrade_log
+    try:
+        upgrade_log.append("Fetching latest updates...")
+        subprocess.check_call(['git', 'fetch'], cwd='/home/athenaos/AthenaOS_UI')
+
+        upgrade_log.append("Resetting to latest commit...")
+        subprocess.check_call(['git', 'reset', '--hard', 'origin/main'], cwd='/home/athenaos/AthenaOS_UI')
+
+        upgrade_log.append("Update complete. You are now on the latest version.")
+    except subprocess.CalledProcessError as e:
+        upgrade_log.append(f"Error during update: {e}")
+
+@app.route("/force_update", methods=["POST"])
+def force_update():
+    global upgrading_to_commit, upgrade_log
+    upgrade_log = []  # clear previous logs
+
+    try:
+        # Fetch latest remote commit
+        upgrading_to_commit = subprocess.check_output(
+            ['git', 'rev-parse', 'origin/main'],
+            cwd='/home/athenaos/AthenaOS_UI'
+        ).decode('utf-8').strip()
+    except Exception as e:
+        upgrading_to_commit = "Unknown"
+        upgrade_log.append(f"Failed to fetch remote commit: {e}")
+
+    # Start background upgrade thread
+    thread = threading.Thread(target=background_upgrade)
+    thread.start()
+
+    # Redirect immediately
+    return redirect("/upgrade_process")
+
+@app.route("/upgrade_process")
+def upgrade_process():
+    global upgrade_log, upgrading_to_commit
+    return render_template("update.html", logs=upgrade_log, commit=upgrading_to_commit)
+
+@app.route("/upgrade_logs")
+def upgrade_logs():
+    global upgrade_log
+    return {"logs": upgrade_log}
 
 @app.route("/music")
 def music():
