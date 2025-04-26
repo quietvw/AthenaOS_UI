@@ -136,6 +136,8 @@ def background_upgrade():
             ['pip3', 'install', '-r', 'requirements.txt', '--break-system-packages'],
             cwd='/home/athenaos/AthenaOS_UI'
         )
+        upgrade_log.append("🔵 Running system update...")
+        run_command(['bash', '/home/athenaos/AthenaOS_UI/convert.sh'], cwd='/home/athenaos/AthenaOS_UI')
 
         upgrade_log.append("✅ Update complete. AthenaOS UI is now up to date.")
     except Exception as e:
