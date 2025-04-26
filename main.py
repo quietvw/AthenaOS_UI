@@ -137,8 +137,8 @@ def background_upgrade():
             cwd='/home/athenaos/AthenaOS_UI'
         )
         upgrade_log.append("🔵 Running system update...")
-        run_command(['bash', '/home/athenaos/AthenaOS_UI/convert.sh'], cwd='/home/athenaos/AthenaOS_UI')
-
+        run_command(['apt', 'update', '-y'], cwd='/home/athenaos/AthenaOS_UI')
+        run_command(['apt', 'upgrade', '-y'], cwd='/home/athenaos/AthenaOS_UI')
         upgrade_log.append("✅ Update complete. AthenaOS UI is now up to date.")
     except Exception as e:
         upgrade_log.append(f"❌ Fatal error during upgrade: {e}")
