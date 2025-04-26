@@ -1,116 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Project Athena - Call Interface</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        function toggleDropdown() {
-            const menu = document.getElementById('dropdownMenu');
-            menu.classList.toggle('hidden');
-        }
+{% extends "base.html" %}
 
-        function toggleTheme() {
-    const body = document.body;
-    body.classList.toggle('light-gradient');
-    body.classList.toggle('dark-gradient');
 
-    // Toggle dark mode styles on dropdown and call box
-    const dropdown = document.getElementById('dropdownMenu');
-    dropdown.classList.toggle('bg-white');
-    dropdown.classList.toggle('bg-gray-800');
-    dropdown.classList.toggle('text-gray-700');
-    dropdown.classList.toggle('text-white');
-
-    const callBox = document.getElementById('callBox');
-    callBox.classList.toggle('bg-black');
-    callBox.classList.toggle('bg-gray-900');
-}
-function toggleVolumeDropdown() {
-  const volumeMenu = document.getElementById('volumeDropdown');
-  volumeMenu.classList.toggle('hidden');
-}
-    </script>
-     <style>
-        .light-gradient {
-            background: linear-gradient(to right, #c3b5f4, #fcb4b4, #faeb8d);
-        }
-        .dark-gradient {
-            background: linear-gradient(to right, #2d2d2d, #383838, #505050);
-        }
-    
-        .dark-gradient .hover\\:bg-gray-100:hover {
-            background-color: #4b5563 !important; /* Tailwind's gray-700 */
-        }
-    </style>
-    
-</head>
-<body class="light-gradient min-h-screen overflow-hidden flex flex-col">
-    
- <!-- Top Bar with Connected Badge, Dropdown Menu, and Call Interface -->
-<div class="flex justify-between items-center p-4">
-    <div class="flex items-center space-x-3">
-        <!-- Connected Badge -->
-        <button class="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600 cursor-default">
-            ● Connected
-        </button>
-    
-            <!-- Wi-Fi & Volume Controls -->
-            <div class="flex items-center space-x-3 relative">
-
-                <!-- Wi-Fi Icon Box -->
-                <div class="bg-gray-800 text-white p-2 rounded shadow hover:bg-gray-100 cursor-default shadow hover:bg-gray-700">
-                  <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1">
-                    <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
-                    <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
-                    <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-                    <line x1="12" y1="20" x2="12.01" y2="20"></line>
-                  </svg>
-                </div>
-              
-       <!-- Bluetooth Icon Box -->
-       <div class="bg-gray-800 text-white p-2 rounded shadow hover:bg-gray-100 cursor-default shadow hover:bg-gray-700">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline></svg>
-      </div>
-
-                <!-- Volume Button -->
-                <div class="relative">
-                  <button onclick="toggleVolumeDropdown()" class="bg-gray-800 text-white p-2 rounded shadow hover:bg-gray-100 cursor-default shadow hover:bg-gray-700">
-                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                  </button>
-              
-                  <!-- Volume Slider Dropdown -->
-                  <div id="volumeDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg p-4 z-10">
-                    <label for="volume" class="block text-sm font-medium text-gray-700 mb-2">Volume</label>
-                    <input type="range" id="volume" name="volume" min="0" max="100" class="w-full">
-                  </div>
-                </div>
-              
-            </div> 
-    </div>
-  
-
-    <!-- Menu Dropdown -->
-    <div class="flex items-center space-x-2">
-        <span class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
-            03:11 PM
-        </span>
-        <!-- Menu Dropdown -->
-       <!-- Moon Button -->
-       <button onclick="toggleTheme()" class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-    </button>
-
-     
-    </div>
-</div>
-
+{% block content %}
 <!-- Call Interface -->
 <div class="flex flex-grow p-4 justify-center items-center">
     <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
         <!-- Assistant Image on the Left -->
         <div class="flex justify-center">
-            <img src="/static/assistant_base.png" alt="Assistant Image" class="w-128 h-128 rounded-full">
+            <img src="/static/assistant_smile.png" alt="Assistant Image" class="w-64 h-64 rounded-full">
         </div>
 
         <!-- Call Info and Button on the Right -->
@@ -147,6 +44,24 @@ function toggleVolumeDropdown() {
         </div>
     </div>
 </div>
-
-</body>
-</html>
+<script>
+    let seconds = 0;
+    
+    function formatTime(sec) {
+      const hrs = String(Math.floor(sec / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+      const secs = String(sec % 60).padStart(2, '0');
+      return `${hrs}:${mins}:${secs}`;
+    }
+    
+    function startCallTimer() {
+      setInterval(() => {
+        seconds++;
+        document.getElementById("callTime").textContent = formatTime(seconds);
+      }, 1000);
+    }
+    
+    document.addEventListener("DOMContentLoaded", startCallTimer);
+    </script>
+    
+{% endblock %}
