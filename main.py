@@ -98,24 +98,49 @@ def home():
 def lock():
     return render_template("pin_protect.html")
 
-import subprocess
-import threading
+
 
 upgrade_log = []
 upgrading_to_commit = None
 
+
+def run_command(cmd, cwd):
+    global upgrade_log
+    try:
+        process = subprocess.Popen(
+            cmd,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        for line in process.stdout:
+            upgrade_log.append(line.strip())
+        process.wait()
+        if process.returncode != 0:
+            upgrade_log.append(f"❌ Command failed with return code {process.returncode}")
+    except Exception as e:
+        upgrade_log.append(f"❌ Exception: {str(e)}")
+
 def background_upgrade():
     global upgrade_log
     try:
-        upgrade_log.append("Fetching latest updates...")
-        subprocess.check_call(['git', 'fetch'], cwd='/home/athenaos/AthenaOS_UI')
+        upgrade_log.append("🔵 Fetching latest updates from remote...")
+        run_command(['git', 'fetch', '--all'], cwd='/home/athenaos/AthenaOS_UI')
 
-        upgrade_log.append("Resetting to latest commit...")
-        subprocess.check_call(['git', 'reset', '--hard', 'origin/main'], cwd='/home/athenaos/AthenaOS_UI')
+        upgrade_log.append("🔵 Resetting to latest origin/main...")
+        run_command(['git', 'reset', '--hard', 'origin/main'], cwd='/home/athenaos/AthenaOS_UI')
 
-        upgrade_log.append("Update complete. You are now on the latest version.")
-    except subprocess.CalledProcessError as e:
-        upgrade_log.append(f"Error during update: {e}")
+        upgrade_log.append("🔵 Installing updated Python requirements...")
+        run_command(
+            ['pip3', 'install', '-r', 'requirements.txt', '--break-system-packages'],
+            cwd='/home/athenaos/AthenaOS_UI'
+        )
+
+        upgrade_log.append("✅ Update complete. AthenaOS UI is now up to date.")
+    except Exception as e:
+        upgrade_log.append(f"❌ Fatal error during upgrade: {e}")
+
 
 @app.route("/force_update", methods=["GET"])
 def force_update():
