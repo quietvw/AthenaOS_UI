@@ -4,12 +4,12 @@
   {% include "settings_menu.html" %}
 
   <main class="col-span-9 p-6 bg-gray-100 rounded-xl shadow-xl overflow-y-auto" id="netSettingsBox">
-
+    <!-- Header -->
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-semibold">Network Settings</h1>
     </div>
 
-    <!-- WIFI Section -->
+    <!-- Wi-Fi Section -->
     <section class="mb-8">
       <div class="flex justify-between items-center mb-2">
         <h2 class="text-xl font-semibold">Wi-Fi</h2>
@@ -25,17 +25,65 @@
       <h2 class="text-xl font-semibold mb-2">Ethernet Interfaces</h2>
       <div id="ethernetInterfaces" class="space-y-4"></div>
     </section>
-
   </main>
 </div>
 
+<!-- Modal -->
+<div id="inputModal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-50 z-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h2 id="modalTitle" class="text-xl font-semibold mb-4">Input Required</h2>
+    <div id="modalContent" class="space-y-4"></div>
+    <div class="flex justify-end mt-6 gap-2">
+      <button onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+      <button onclick="submitModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
+    </div>
+  </div>
+</div>
+
 <script>
-async function toggleWifi() {
-  await fetch("/ws/net_wifi", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "toggle_wifi" })
+let modalResolve; // holds Promise resolver
+
+function openModal(title, fields) {
+  return new Promise((resolve) => {
+    modalResolve = resolve;
+    document.getElementById('modalTitle').innerText = title;
+
+    const content = document.getElementById('modalContent');
+    content.innerHTML = '';
+
+    fields.forEach(field => {
+      content.innerHTML += `
+        <div>
+          <label class="block text-sm font-medium mb-1">${field.label}</label>
+          <input type="text" id="field_${field.name}" placeholder="${field.placeholder || ''}"
+            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500">
+        </div>`;
+    });
+
+    document.getElementById('inputModal').classList.remove('hidden');
+    document.getElementById('inputModal').classList.add('flex');
   });
+}
+
+function closeModal() {
+  document.getElementById('inputModal').classList.add('hidden');
+  document.getElementById('inputModal').classList.remove('flex');
+  modalResolve(null); // user canceled
+}
+
+function submitModal() {
+  const inputs = document.querySelectorAll('#modalContent input');
+  const values = {};
+  inputs.forEach(input => {
+    values[input.id.replace('field_', '')] = input.value;
+  });
+  closeModal();
+  modalResolve(values);
+}
+
+// --- Wi-Fi Management ---
+async function toggleWifi() {
+  await fetch("/ws/net_wifi", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "toggle_wifi" }) });
   loadWifiSettings();
 }
 
@@ -49,12 +97,10 @@ async function loadWifiSettings() {
     container.innerHTML = '<div class="p-4 border rounded-lg text-center">No Wi-Fi device found.</div>';
     return;
   }
-
   if (!data.wifi_enabled) {
     container.innerHTML = '<div class="p-4 border rounded-lg text-center">Wi-Fi is disabled.</div>';
     return;
   }
-
   if (data.networks.length === 0) {
     container.innerHTML = '<div class="p-4 border rounded-lg text-center">No networks available.</div>';
     return;
@@ -79,26 +125,35 @@ async function loadWifiSettings() {
 }
 
 async function connectWifi(ssid, secure) {
-  const password = secure ? prompt(`Enter password for '${ssid}'`) : null;
-  const useDhcp = confirm("Use DHCP? (OK = DHCP, Cancel = Static)");
-  let staticConfig = {};
+  let password = null;
+  if (secure) {
+    const input = await openModal("Wi-Fi Password", [
+      { label: `Password for '${ssid}'`, name: "password", placeholder: "Enter Wi-Fi password" }
+    ]);
+    if (!input) return; // canceled
+    password = input.password;
+  }
 
+  const { mode } = await openModal("Connection Mode", [
+    { label: "Type 'dhcp' or 'static'", name: "mode", placeholder: "dhcp or static" }
+  ]);
+  const useDhcp = mode.trim().toLowerCase() === 'dhcp';
+
+  let staticConfig = {};
   if (!useDhcp) {
-    staticConfig.ip = prompt("Enter Static IP:");
-    staticConfig.gateway = prompt("Enter Gateway:");
-    staticConfig.dns = prompt("Enter DNS:");
+    const config = await openModal("Static IP Config", [
+      { label: "Static IP", name: "ip", placeholder: "192.168.1.100" },
+      { label: "Gateway", name: "gateway", placeholder: "192.168.1.1" },
+      { label: "DNS", name: "dns", placeholder: "8.8.8.8" }
+    ]);
+    if (!config) return;
+    staticConfig = config;
   }
 
   await fetch("/ws/net_wifi", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "connect",
-      ssid,
-      password,
-      use_dhcp: useDhcp,
-      static_config: staticConfig
-    })
+    body: JSON.stringify({ action: "connect", ssid, password, use_dhcp: useDhcp, static_config: staticConfig })
   });
 
   loadWifiSettings();
@@ -141,21 +196,22 @@ async function setEthernetDhcp(iface) {
 }
 
 async function setEthernetStatic(iface) {
-  const ip = prompt("Static IP Address:");
-  const gateway = prompt("Gateway:");
-  const dns = prompt("DNS Server:");
+  const config = await openModal("Static Ethernet Config", [
+    { label: "Static IP", name: "ip", placeholder: "192.168.1.200" },
+    { label: "Gateway", name: "gateway", placeholder: "192.168.1.1" },
+    { label: "DNS", name: "dns", placeholder: "8.8.8.8" }
+  ]);
+  if (!config) return;
+
   await fetch("/ws/net_ethernet", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "set_static",
-      iface,
-      static_config: { ip, gateway, dns }
-    })
+    body: JSON.stringify({ action: "set_static", iface, static_config: config })
   });
   loadEthernetSettings();
 }
 
+// Initial load
 loadWifiSettings();
 loadEthernetSettings();
 </script>
