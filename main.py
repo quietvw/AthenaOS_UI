@@ -77,6 +77,7 @@ def scan_wifi_networks():
         print(f"Wi-Fi list output:\n{output}")
 
         networks = []
+        seen_ssids = set()
         lines = output.splitlines()
 
         for line in lines:
@@ -84,8 +85,20 @@ def scan_wifi_networks():
             parts = line.split(":")
             if len(parts) >= 4:
                 in_use, ssid, signal, security = parts[:4]
+                ssid = ssid.strip()
+
+                # Skip hidden SSIDs
+                if not ssid:
+                    continue
+
+                # Skip duplicates
+                if ssid in seen_ssids:
+                    continue
+
+                seen_ssids.add(ssid)
+
                 networks.append({
-                    "ssid": ssid.strip() or "(Hidden SSID)",
+                    "ssid": ssid,
                     "secure": security.strip() != "--",
                     "signal": int(signal.strip()),
                     "connected": in_use.strip() == "*"
