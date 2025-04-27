@@ -40,6 +40,91 @@ def is_wireless(interface):
     wireless_path = f"/sys/class/net/{interface}/wireless"
     return os.path.isdir(wireless_path)
 
+def has_wifi_device():
+    """Check if any wireless device exists."""
+    return any(os.path.isdir(f"/sys/class/net/{iface}/wireless") for iface in os.listdir("/sys/class/net"))
+
+def scan_wifi_networks():
+    """Scan for available wifi networks."""
+    networks = []
+    try:
+        output = subprocess.check_output(["nmcli", "-f", "SSID,SECURITY,SIGNAL,IN-USE", "dev", "wifi"]).decode()
+        lines = output.strip().split("\n")[1:]  # Skip header
+        for line in lines:
+            parts = re.split(r'\s{2,}', line.strip())
+            if len(parts) >= 4:
+                ssid, security, signal, in_use = parts[:4]
+                networks.append({
+                    "ssid": ssid.strip() or "(Hidden SSID)",
+                    "secure": security.strip() != "--",
+                    "signal": int(signal.strip()),
+                    "connected": in_use.strip() == "*"
+                })
+    except Exception as e:
+        print("Wi-Fi Scan Error:", e)
+    return networks
+
+def wifi_enabled():
+    """Check if wifi is enabled."""
+    try:
+        result = subprocess.check_output(["nmcli", "radio", "wifi"]).decode().strip()
+        return result.lower() == "enabled"
+    except:
+        return False
+
+@app.route("/ws/net_wifi", methods=["GET", "POST"])
+def net_wifi():
+    try:
+        if request.method == "POST":
+            action = request.json.get("action")
+            if action == "toggle_wifi":
+                state = "off" if wifi_enabled() else "on"
+                subprocess.run(["nmcli", "radio", "wifi", state])
+                return jsonify({"wifi_enabled": state == "on"})
+            elif action == "connect":
+                ssid = request.json.get("ssid")
+                password = request.json.get("password")
+                use_dhcp = request.json.get("use_dhcp")
+                static_config = request.json.get("static_config", {})
+
+                if not ssid:
+                    return jsonify({"error": "SSID is required"}), 400
+
+                connect_cmd = ["nmcli", "dev", "wifi", "connect", ssid]
+                if password:
+                    connect_cmd += ["password", password]
+                if not use_dhcp:
+                    if static_config:
+                        subprocess.run(["nmcli", "con", "mod", ssid,
+                                        "ipv4.addresses", static_config["ip"],
+                                        "ipv4.gateway", static_config["gateway"],
+                                        "ipv4.dns", static_config["dns"],
+                                        "ipv4.method", "manual"])
+                subprocess.run(connect_cmd)
+                return jsonify({"status": "connected"})
+
+            elif action == "disconnect":
+                subprocess.run(["nmcli", "con", "down", "id", request.json.get("ssid")])
+                return jsonify({"status": "disconnected"})
+
+        if not has_wifi_device():
+            return jsonify({
+                "has_wifi": False,
+                "wifi_enabled": False,
+                "networks": []
+            })
+
+        wifi_on = wifi_enabled()
+        networks = scan_wifi_networks() if wifi_on else []
+
+        return jsonify({
+            "has_wifi": True,
+            "wifi_enabled": wifi_on,
+            "networks": networks
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/ws/net_connection")
 def net_connection():
     try:
