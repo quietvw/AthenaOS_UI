@@ -69,19 +69,32 @@ def wifi_enabled():
 def scan_wifi_networks():
     """Scan available Wi-Fi networks."""
     networks = []
-    output = run_cmd(["nmcli", "-f", "SSID,SECURITY,SIGNAL,IN-USE", "dev", "wifi", "list"])
-    lines = output.splitlines()[1:]  # Skip header
-    for line in lines:
-        parts = re.split(r'\s{2,}', line.strip())
-        if len(parts) >= 4:
-            ssid, security, signal, in_use = parts[:4]
-            networks.append({
-                "ssid": ssid.strip() or "(Hidden SSID)",
-                "secure": security.strip() != "--",
-                "signal": int(signal.strip()),
-                "connected": in_use.strip() == "*"
-            })
+    try:
+        output = run_cmd(["nmcli", "-f", "SSID,SECURITY,SIGNAL,IN-USE", "dev", "wifi", "list"])
+        lines = output.splitlines()[1:]  # Skip header
+        for line in lines:
+            parts = re.split(r'\s{2,}', line.strip())
+            if len(parts) >= 4:
+                ssid, security, signal, in_use = parts[:4]
+                networks.append({
+                    "ssid": ssid.strip() or "(Hidden SSID)",
+                    "secure": security.strip() != "--",
+                    "signal": int(signal.strip()),
+                    "connected": in_use.strip() == "*"
+                })
+    except Exception as e:
+        print(f"Wi-Fi scan failed: {e}")
     return networks
+
+def background_wifi_scanner():
+    global wifi_networks_cache
+    while True:
+        wifi_networks_cache = scan_wifi_networks()
+        time.sleep(5)  # scan every 5 seconds
+
+# Start background scanning
+scanner_thread = threading.Thread(target=background_wifi_scanner, daemon=True)
+scanner_thread.start()
 
 @app.route("/")
 def index():
