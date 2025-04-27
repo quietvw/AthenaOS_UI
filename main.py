@@ -67,26 +67,23 @@ def wifi_enabled():
     return run_cmd(["nmcli", "radio", "wifi"]).lower() == "enabled"
 
 def scan_wifi_networks():
-    """Force rescan and scan available Wi-Fi networks. Debugging version."""
+    """Scan available Wi-Fi networks."""
     try:
-        print("Starting Wi-Fi rescan...")
-        rescan_output = run_cmd(["nmcli", "device", "wifi", "rescan"])
-        print(f"Rescan output: {rescan_output}")
+        run_cmd(["nmcli", "device", "wifi", "rescan"])
 
-        output = run_cmd(["nmcli", "device", "wifi", "list"])
+        output = run_cmd([
+            "nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"
+        ])
         print(f"Wi-Fi list output:\n{output}")
 
         networks = []
         lines = output.splitlines()
-        if len(lines) <= 1:
-            print("No networks found.")
-            return []
 
-        for line in lines[1:]:  # Skip header
-            parts = re.split(r'\s{2,}', line.strip())
-            print(f"Parsed line parts: {parts}")
+        for line in lines:
+            print(f"Parsed terse line: {line}")
+            parts = line.split(":")
             if len(parts) >= 4:
-                ssid, security, signal, in_use = parts[:4]
+                in_use, ssid, signal, security = parts[:4]
                 networks.append({
                     "ssid": ssid.strip() or "(Hidden SSID)",
                     "secure": security.strip() != "--",
@@ -99,6 +96,7 @@ def scan_wifi_networks():
     except Exception as e:
         print(f"Wi-Fi scan failed: {e}")
         return []
+
 
 def background_wifi_scanner():
     global wifi_networks_cache
