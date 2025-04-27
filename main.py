@@ -67,31 +67,38 @@ def wifi_enabled():
     return run_cmd(["nmcli", "radio", "wifi"]).lower() == "enabled"
 
 def scan_wifi_networks():
-    """Scan available Wi-Fi networks and deduplicate by SSID, keeping strongest signal."""
-    networks = {}
+    """Force rescan and scan available Wi-Fi networks. Debugging version."""
     try:
-        output = run_cmd(["nmcli", "-f", "SSID,SECURITY,SIGNAL,IN-USE", "dev", "wifi", "list"])
-        lines = output.splitlines()[1:]  # Skip header
-        for line in lines:
+        print("Starting Wi-Fi rescan...")
+        rescan_output = run_cmd(["nmcli", "device", "wifi", "rescan"])
+        print(f"Rescan output: {rescan_output}")
+
+        output = run_cmd(["nmcli", "device", "wifi", "list"])
+        print(f"Wi-Fi list output:\n{output}")
+
+        networks = []
+        lines = output.splitlines()
+        if len(lines) <= 1:
+            print("No networks found.")
+            return []
+
+        for line in lines[1:]:  # Skip header
             parts = re.split(r'\s{2,}', line.strip())
+            print(f"Parsed line parts: {parts}")
             if len(parts) >= 4:
                 ssid, security, signal, in_use = parts[:4]
-                ssid = ssid.strip() or "(Hidden SSID)"
-                secure = security.strip() != "--"
-                signal = int(signal.strip())
-                connected = in_use.strip() == "*"
+                networks.append({
+                    "ssid": ssid.strip() or "(Hidden SSID)",
+                    "secure": security.strip() != "--",
+                    "signal": int(signal.strip()),
+                    "connected": in_use.strip() == "*"
+                })
 
-                # If SSID already seen, keep the one with stronger signal
-                if ssid not in networks or signal > networks[ssid]['signal']:
-                    networks[ssid] = {
-                        "ssid": ssid,
-                        "secure": secure,
-                        "signal": signal,
-                        "connected": connected
-                    }
+        return sorted(networks, key=lambda x: x['signal'], reverse=True)
+
     except Exception as e:
         print(f"Wi-Fi scan failed: {e}")
-    return sorted(networks.values(), key=lambda x: x['signal'], reverse=True)
+        return []
 
 def background_wifi_scanner():
     global wifi_networks_cache
