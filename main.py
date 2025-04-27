@@ -3,6 +3,7 @@ from datetime import datetime
 import requests
 from geopy.geocoders import Nominatim
 import os
+import re
 import subprocess
 import threading
 import time
@@ -16,18 +17,27 @@ weather_cache = {
     "date": None,
     "data": {}
 }
+def run_cmd(cmd):
+    """Run shell command safely."""
+    try:
+        return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
+    except Exception as e:
+        print(f"Command failed {cmd}: {e}")
+        return ""
 
 def check_internet():
     """Ping Google DNS to verify internet connectivity."""
-    result = subprocess.run(["ping", "-c", "1", "-W", "1", "8.8.8.8"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return result.returncode == 0
+    return subprocess.run(["ping", "-c", "1", "-W", "1", "8.8.8.8"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+
+def get_all_interfaces():
+    """Get all interfaces excluding loopback."""
+    return [iface for iface in os.listdir("/sys/class/net/") if iface != "lo"]
 
 def get_active_interfaces():
     """Return list of active (UP) interfaces excluding loopback."""
     interfaces = []
-    ip_link_output = subprocess.check_output("ip -o link show up", shell=True).decode()
-    
-    for line in ip_link_output.splitlines():
+    output = run_cmd(["ip", "-o", "link", "show", "up"])
+    for line in output.splitlines():
         parts = line.split(": ")
         if len(parts) > 1:
             iface = parts[1].split('@')[0]
@@ -37,27 +47,30 @@ def get_active_interfaces():
 
 def is_wireless(interface):
     """Check if a network interface is wireless."""
-    wireless_path = f"/sys/class/net/{interface}/wireless"
-    return os.path.isdir(wireless_path)
+    return os.path.isdir(f"/sys/class/net/{interface}/wireless") or "wl" in interface
 
-def run_cmd(cmd):
-    """Run shell command safely."""
-    try:
-        return subprocess.check_output(cmd).decode().strip()
-    except Exception as e:
-        print(f"Command failed {cmd}: {e}")
-        return ""
+def get_wireless_interfaces():
+    """Return all wireless interfaces."""
+    return [iface for iface in get_all_interfaces() if is_wireless(iface)]
+
+def get_ethernet_interfaces():
+    """Return all wired interfaces."""
+    eth_like = ("eth", "enp", "eno")
+    return [iface for iface in get_all_interfaces() if iface.startswith(eth_like)]
 
 def has_wifi_device():
-    return any(os.path.isdir(f"/sys/class/net/{iface}/wireless") for iface in os.listdir("/sys/class/net"))
+    """Check if there's at least one Wi-Fi device."""
+    return bool(get_wireless_interfaces())
 
 def wifi_enabled():
+    """Check if Wi-Fi is enabled using NetworkManager."""
     return run_cmd(["nmcli", "radio", "wifi"]).lower() == "enabled"
 
 def scan_wifi_networks():
+    """Scan available Wi-Fi networks."""
     networks = []
-    output = run_cmd(["nmcli", "-f", "SSID,SECURITY,SIGNAL,IN-USE", "dev", "wifi"])
-    lines = output.splitlines()[1:]
+    output = run_cmd(["nmcli", "-f", "SSID,SECURITY,SIGNAL,IN-USE", "dev", "wifi", "list"])
+    lines = output.splitlines()[1:]  # Skip header
     for line in lines:
         parts = re.split(r'\s{2,}', line.strip())
         if len(parts) >= 4:
@@ -70,12 +83,7 @@ def scan_wifi_networks():
             })
     return networks
 
-def get_ethernet_interfaces():
-    interfaces = []
-    for iface in os.listdir("/sys/class/net/"):
-        if "eth" in iface or "enp" in iface:  # eth0, enp3s0, etc
-            interfaces.append(iface)
-    return interfaces
+# Flask routes
 
 @app.route("/ws/net_wifi", methods=["GET", "POST"])
 def net_wifi():
@@ -86,10 +94,11 @@ def net_wifi():
                 new_state = "off" if wifi_enabled() else "on"
                 run_cmd(["nmcli", "radio", "wifi", new_state])
                 return jsonify({"wifi_enabled": new_state == "on"})
+
             elif action == "connect":
                 ssid = request.json.get("ssid")
-                password = request.json.get("password")
-                use_dhcp = request.json.get("use_dhcp")
+                password = request.json.get("password", "")
+                use_dhcp = request.json.get("use_dhcp", True)
                 static_config = request.json.get("static_config", {})
 
                 connect_cmd = ["nmcli", "device", "wifi", "connect", ssid]
@@ -98,7 +107,6 @@ def net_wifi():
                 run_cmd(connect_cmd)
 
                 if not use_dhcp and static_config:
-                    # Set static IP
                     run_cmd(["nmcli", "con", "mod", ssid,
                              "ipv4.addresses", static_config["ip"],
                              "ipv4.gateway", static_config["gateway"],
@@ -107,16 +115,14 @@ def net_wifi():
                     run_cmd(["nmcli", "con", "up", ssid])
 
                 return jsonify({"status": "connected"})
+
             elif action == "disconnect":
                 ssid = request.json.get("ssid")
                 run_cmd(["nmcli", "con", "down", "id", ssid])
                 return jsonify({"status": "disconnected"})
 
-        if not has_wifi_device():
-            return jsonify({"has_wifi": False, "wifi_enabled": False, "networks": []})
-
         return jsonify({
-            "has_wifi": True,
+            "has_wifi": has_wifi_device(),
             "wifi_enabled": wifi_enabled(),
             "networks": scan_wifi_networks()
         })
@@ -137,6 +143,7 @@ def net_ethernet():
                 run_cmd(["nmcli", "con", "mod", iface, "ipv4.method", "auto"])
                 run_cmd(["nmcli", "con", "up", iface])
                 return jsonify({"status": "dhcp_set"})
+
             elif action == "set_static":
                 static_config = request.json.get("static_config", {})
                 run_cmd(["nmcli", "con", "mod", iface,
