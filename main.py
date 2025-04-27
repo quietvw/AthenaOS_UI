@@ -67,8 +67,8 @@ def wifi_enabled():
     return run_cmd(["nmcli", "radio", "wifi"]).lower() == "enabled"
 
 def scan_wifi_networks():
-    """Scan available Wi-Fi networks."""
-    networks = []
+    """Scan available Wi-Fi networks and deduplicate by SSID, keeping strongest signal."""
+    networks = {}
     try:
         output = run_cmd(["nmcli", "-f", "SSID,SECURITY,SIGNAL,IN-USE", "dev", "wifi", "list"])
         lines = output.splitlines()[1:]  # Skip header
@@ -76,15 +76,22 @@ def scan_wifi_networks():
             parts = re.split(r'\s{2,}', line.strip())
             if len(parts) >= 4:
                 ssid, security, signal, in_use = parts[:4]
-                networks.append({
-                    "ssid": ssid.strip() or "(Hidden SSID)",
-                    "secure": security.strip() != "--",
-                    "signal": int(signal.strip()),
-                    "connected": in_use.strip() == "*"
-                })
+                ssid = ssid.strip() or "(Hidden SSID)"
+                secure = security.strip() != "--"
+                signal = int(signal.strip())
+                connected = in_use.strip() == "*"
+
+                # If SSID already seen, keep the one with stronger signal
+                if ssid not in networks or signal > networks[ssid]['signal']:
+                    networks[ssid] = {
+                        "ssid": ssid,
+                        "secure": secure,
+                        "signal": signal,
+                        "connected": connected
+                    }
     except Exception as e:
         print(f"Wi-Fi scan failed: {e}")
-    return networks
+    return sorted(networks.values(), key=lambda x: x['signal'], reverse=True)
 
 def background_wifi_scanner():
     global wifi_networks_cache
@@ -95,10 +102,6 @@ def background_wifi_scanner():
 # Start background scanning
 scanner_thread = threading.Thread(target=background_wifi_scanner, daemon=True)
 scanner_thread.start()
-
-@app.route("/")
-def index():
-    return render_template("networks.html")
 
 @app.route("/ws/net_wifi", methods=["GET", "POST"])
 def net_wifi():
@@ -136,15 +139,25 @@ def net_wifi():
                 run_cmd(["nmcli", "con", "down", "id", ssid])
                 return jsonify({"status": "disconnected"})
 
-        # Always return the network list for GET
+        # Always return the cached network list for GET
         return jsonify({
             "has_wifi": has_wifi_device(),
             "wifi_enabled": wifi_enabled(),
-            "networks": scan_wifi_networks()
+            "networks": wifi_networks_cache
         })
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Start background scanning
+scanner_thread = threading.Thread(target=background_wifi_scanner, daemon=True)
+scanner_thread.start()
+
+@app.route("/")
+def index():
+    return render_template("networks.html")
+
+
 
 @app.route("/ws/net_ethernet", methods=["GET", "POST"])
 def net_ethernet():
