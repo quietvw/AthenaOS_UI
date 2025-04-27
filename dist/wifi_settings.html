@@ -212,7 +212,10 @@ async function setEthernetStatic(iface) {
 }
 
 // Initial Load
-loadWifiSettings();
-loadEthernetSettings();
+document.addEventListener('DOMContentLoaded', () => {
+  loadWifiSettings();
+  loadEthernetSettings();
+});
+
 </script>
 {% endblock %}

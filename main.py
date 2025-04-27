@@ -83,7 +83,9 @@ def scan_wifi_networks():
             })
     return networks
 
-# Flask routes
+@app.route("/")
+def index():
+    return render_template("networks.html")
 
 @app.route("/ws/net_wifi", methods=["GET", "POST"])
 def net_wifi():
@@ -121,6 +123,7 @@ def net_wifi():
                 run_cmd(["nmcli", "con", "down", "id", ssid])
                 return jsonify({"status": "disconnected"})
 
+        # Always return the network list for GET
         return jsonify({
             "has_wifi": has_wifi_device(),
             "wifi_enabled": wifi_enabled(),
@@ -159,6 +162,7 @@ def net_ethernet():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/ws/net_connection")
 def net_connection():
