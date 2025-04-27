@@ -176,9 +176,6 @@ def net_wifi():
 scanner_thread = threading.Thread(target=background_wifi_scanner, daemon=True)
 scanner_thread.start()
 
-@app.route("/")
-def index():
-    return render_template("networks.html")
 
 
 
