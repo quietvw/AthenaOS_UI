@@ -76,8 +76,7 @@ def scan_wifi_networks():
         ])
         print(f"Wi-Fi list output:\n{output}")
 
-        networks = []
-        seen_ssids = set()
+        ssid_map = {}
         lines = output.splitlines()
 
         for line in lines:
@@ -91,20 +90,26 @@ def scan_wifi_networks():
                 if not ssid:
                     continue
 
-                # Skip duplicates
-                if ssid in seen_ssids:
-                    continue
-
-                seen_ssids.add(ssid)
-
-                networks.append({
+                network = {
                     "ssid": ssid,
                     "secure": security.strip() != "--",
                     "signal": int(signal.strip()),
                     "connected": in_use.strip() == "*"
-                })
+                }
 
-        return sorted(networks, key=lambda x: x['signal'], reverse=True)
+                # If we already saw this SSID, prefer the connected one
+                if ssid in ssid_map:
+                    existing = ssid_map[ssid]
+                    if not existing["connected"] and network["connected"]:
+                        ssid_map[ssid] = network
+                    elif not existing["connected"] and not network["connected"]:
+                        if network["signal"] > existing["signal"]:
+                            ssid_map[ssid] = network
+                else:
+                    ssid_map[ssid] = network
+
+        # Sort the final list by signal strength
+        return sorted(ssid_map.values(), key=lambda x: x['signal'], reverse=True)
 
     except Exception as e:
         print(f"Wi-Fi scan failed: {e}")
