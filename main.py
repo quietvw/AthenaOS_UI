@@ -17,6 +17,57 @@ weather_cache = {
     "data": {}
 }
 
+def check_internet():
+    """Ping Google DNS to verify internet connectivity."""
+    result = subprocess.run(["ping", "-c", "1", "-W", "1", "8.8.8.8"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return result.returncode == 0
+
+def get_active_interfaces():
+    """Return list of active (UP) interfaces excluding loopback."""
+    interfaces = []
+    ip_link_output = subprocess.check_output("ip -o link show up", shell=True).decode()
+    
+    for line in ip_link_output.splitlines():
+        parts = line.split(": ")
+        if len(parts) > 1:
+            iface = parts[1].split('@')[0]
+            if iface != "lo":
+                interfaces.append(iface)
+    return interfaces
+
+def is_wireless(interface):
+    """Check if a network interface is wireless."""
+    wireless_path = f"/sys/class/net/{interface}/wireless"
+    return os.path.isdir(wireless_path)
+
+@app.route("/ws/net_connection")
+def net_connection():
+    try:
+        if not check_internet():
+            connection_type = "no internet"
+        else:
+            active_interfaces = get_active_interfaces()
+            connection_type = "unknown"
+            for iface in active_interfaces:
+                if is_wireless(iface):
+                    connection_type = "wifi"
+                    break
+                else:
+                    connection_type = "ethernet"
+                    # Continue checking in case a wireless interface is found
+        icon_mapping = {
+            "wifi": "wifi",
+            "ethernet": "ethernet",
+            "no internet": "x",
+            "unknown": "help-circle"
+        }
+        return jsonify({
+            "connection": connection_type,
+            "icon": icon_mapping.get(connection_type, "help-circle")
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 def get_coordinates(zip_code):
     geolocator = Nominatim(user_agent="weather_app")
     location = geolocator.geocode({"postalcode": zip_code, "country": "USA"})
@@ -195,6 +246,11 @@ def settings():
 @app.route("/settings_wifi")
 def settings_wifi():
     return render_template("wifi_settings.html")
+
+@app.route("/settings_dev")
+def settings_dev():
+    return render_template("dev_settings.html")
+
 
 @app.route("/settings_about")
 def settings_about():
