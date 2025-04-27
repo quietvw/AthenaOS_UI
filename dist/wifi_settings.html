@@ -3,29 +3,29 @@
 <div class="flex-grow p-4 grid grid-cols-12 gap-4 max-h-[calc(100vh-80px)]">
   {% include "settings_menu.html" %}
 
-  <main class="col-span-9 p-6 bg-gray-100 rounded-xl shadow-xl overflow-y-auto" id="wifiSettingsBox">
+  <main class="col-span-9 p-6 bg-gray-100 rounded-xl shadow-xl overflow-y-auto" id="netSettingsBox">
+
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-semibold">Wi-Fi Settings</h1>
-
-      <!-- Toggle Wi-Fi -->
-      <div class="flex items-center gap-2 cursor-pointer select-none" onclick="toggleWifi()">
-        <div id="wifiToggle" class="w-12 h-6 bg-gray-300 rounded-full relative transition-colors duration-300">
-          <div id="wifiThumb" class="w-6 h-6 bg-white rounded-full shadow-md absolute left-0 top-0 transition-all duration-300"></div>
-        </div>
-      </div>
-
-      <!-- Refresh -->
-      <button onclick="loadWifiSettings()" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline>
-          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
-        </svg>
-        Refresh
-      </button>
+      <h1 class="text-2xl font-semibold">Network Settings</h1>
     </div>
 
-    <!-- Networks List -->
-    <div id="wifiNetworks" class="space-y-4"></div>
+    <!-- WIFI Section -->
+    <section class="mb-8">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="text-xl font-semibold">Wi-Fi</h2>
+        <button onclick="toggleWifi()" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">
+          Toggle Wi-Fi
+        </button>
+      </div>
+      <div id="wifiNetworks" class="space-y-4"></div>
+    </section>
+
+    <!-- Ethernet Section -->
+    <section>
+      <h2 class="text-xl font-semibold mb-2">Ethernet Interfaces</h2>
+      <div id="ethernetInterfaces" class="space-y-4"></div>
+    </section>
+
   </main>
 </div>
 
@@ -36,86 +36,51 @@ async function toggleWifi() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "toggle_wifi" })
   });
-  await loadWifiSettings();
+  loadWifiSettings();
 }
 
 async function loadWifiSettings() {
   const res = await fetch("/ws/net_wifi");
   const data = await res.json();
-  
-  const toggle = document.getElementById('wifiToggle');
-  const thumb = document.getElementById('wifiThumb');
-  
-  if (data.wifi_enabled) {
-    toggle.classList.remove("bg-gray-300");
-    toggle.classList.add("bg-blue-500");
-    thumb.classList.add("translate-x-6");
-  } else {
-    toggle.classList.add("bg-gray-300");
-    toggle.classList.remove("bg-blue-500");
-    thumb.classList.remove("translate-x-6");
-  }
-
   const container = document.getElementById('wifiNetworks');
   container.innerHTML = '';
 
   if (!data.has_wifi) {
-    container.innerHTML = `
-      <div class="p-4 border rounded-lg text-center">
-        <h2 class="text-lg font-semibold">No Wi-Fi device found.</h2>
-        <p>You can manually configure your network settings.</p>
-      </div>`;
+    container.innerHTML = '<div class="p-4 border rounded-lg text-center">No Wi-Fi device found.</div>';
     return;
   }
 
   if (!data.wifi_enabled) {
-    container.innerHTML = `
-      <div class="p-4 border rounded-lg text-center">
-        <h2 class="text-lg font-semibold">Wi-Fi is Disabled</h2>
-        <p>Enable Wi-Fi to see available networks.</p>
-      </div>`;
+    container.innerHTML = '<div class="p-4 border rounded-lg text-center">Wi-Fi is disabled.</div>';
     return;
   }
 
   if (data.networks.length === 0) {
-    container.innerHTML = `
-      <div class="p-4 border rounded-lg text-center">
-        <h2 class="text-lg font-semibold">No Networks Found</h2>
-      </div>`;
+    container.innerHTML = '<div class="p-4 border rounded-lg text-center">No networks available.</div>';
     return;
   }
 
-  const isConnected = data.networks.some(net => net.connected);
+  const connected = data.networks.some(net => net.connected);
 
   for (const net of data.networks) {
-    const isCurrent = net.connected;
-    const disabled = isConnected && !isCurrent;
+    const disabled = connected && !net.connected;
     container.innerHTML += `
-      <div class="border rounded-lg p-4 flex justify-between items-center hover:shadow-md">
+      <div class="border rounded-lg p-4 flex justify-between items-center">
         <div>
-          <div class="flex items-center gap-2 text-lg font-medium">
-            ${net.secure ? `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>` : ''}
-            ${net.ssid}
-          </div>
-          <p class="text-sm text-gray-500">${net.secure ? "Secure" : "Open"} - Signal: ${net.signal}% ${isCurrent ? '<span class="text-green-600 font-semibold">Connected</span>' : ''}</p>
+          <div class="font-semibold">${net.ssid}</div>
+          <div class="text-sm">${net.secure ? "Secure" : "Open"} | Signal: ${net.signal}% ${net.connected ? '<span class="text-green-600 font-bold">Connected</span>' : ''}</div>
         </div>
-        ${isCurrent ? `
-          <button class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700" onclick="disconnectFromWifi('${net.ssid}')">
-            Disconnect
-          </button>` :
-          `<button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" ${disabled ? "disabled class='opacity-50 cursor-not-allowed'" : ""} onclick="connectToWifi('${net.ssid}', ${net.secure})">
-            Connect
-          </button>`
+        ${net.connected ? 
+          `<button onclick="disconnectWifi('${net.ssid}')" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Disconnect</button>` :
+          `<button onclick="connectWifi('${net.ssid}', ${net.secure})" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700" ${disabled ? "disabled" : ""}>Connect</button>`
         }
       </div>`;
   }
 }
 
-async function connectToWifi(ssid, secure) {
-  const password = secure ? prompt(`Enter password for '${ssid}':`) : null;
-  const useDhcp = confirm("Use DHCP for IP configuration? (OK = DHCP, Cancel = Static)");
+async function connectWifi(ssid, secure) {
+  const password = secure ? prompt(`Enter password for '${ssid}'`) : null;
+  const useDhcp = confirm("Use DHCP? (OK = DHCP, Cancel = Static)");
   let staticConfig = {};
 
   if (!useDhcp) {
@@ -136,18 +101,62 @@ async function connectToWifi(ssid, secure) {
     })
   });
 
-  await loadWifiSettings();
+  loadWifiSettings();
 }
 
-async function disconnectFromWifi(ssid) {
+async function disconnectWifi(ssid) {
   await fetch("/ws/net_wifi", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "disconnect", ssid })
   });
-  await loadWifiSettings();
+  loadWifiSettings();
+}
+
+async function loadEthernetSettings() {
+  const res = await fetch("/ws/net_ethernet");
+  const data = await res.json();
+  const container = document.getElementById('ethernetInterfaces');
+  container.innerHTML = '';
+
+  for (const iface of data.interfaces) {
+    container.innerHTML += `
+      <div class="border rounded-lg p-4 flex justify-between items-center">
+        <div class="font-semibold">${iface}</div>
+        <div class="flex gap-2">
+          <button onclick="setEthernetDhcp('${iface}')" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Set DHCP</button>
+          <button onclick="setEthernetStatic('${iface}')" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Set Static</button>
+        </div>
+      </div>`;
+  }
+}
+
+async function setEthernetDhcp(iface) {
+  await fetch("/ws/net_ethernet", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "set_dhcp", iface })
+  });
+  loadEthernetSettings();
+}
+
+async function setEthernetStatic(iface) {
+  const ip = prompt("Static IP Address:");
+  const gateway = prompt("Gateway:");
+  const dns = prompt("DNS Server:");
+  await fetch("/ws/net_ethernet", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "set_static",
+      iface,
+      static_config: { ip, gateway, dns }
+    })
+  });
+  loadEthernetSettings();
 }
 
 loadWifiSettings();
+loadEthernetSettings();
 </script>
 {% endblock %}
