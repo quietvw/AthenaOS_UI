@@ -35,235 +35,137 @@
     </div>
   </div>
 </div>
-
 <script>
-let modalResolve;
-
-function openModal(title, fields) {
-  return new Promise((resolve) => {
-    modalResolve = resolve;
-    document.getElementById('modalTitle').innerText = title;
-    const content = document.getElementById('modalContent');
-    content.innerHTML = '';
-
-    fields.forEach(field => {
-      if (field.type === 'select') {
-        content.innerHTML += `
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">${field.label}</label>
-            <select id="field_${field.name}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring focus:border-blue-500">
-              ${field.options.map(opt => `<option value="${opt}" ${opt === 'dhcp' ? 'selected' : ''}>${opt}</option>`).join('')}
-            </select>
-          </div>`;
-      } else {
-        content.innerHTML += `
-          <div class="field-container" data-for="${field.name}" style="display: ${field.name === 'ip' || field.name === 'gateway' || field.name === 'dns' ? 'none' : 'block'};">
-            <label class="block text-sm font-medium text-gray-700 mb-2">${field.label}</label>
-            <input type="${field.type || 'text'}" id="field_${field.name}" placeholder="${field.placeholder || ''}"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring focus:border-blue-500">
-          </div>`;
+  let modalResolve;
+  
+  function openModal(title, fields) {
+    return new Promise((resolve) => {
+      modalResolve = resolve;
+      document.getElementById('modalTitle').innerText = title;
+      const content = document.getElementById('modalContent');
+      content.innerHTML = '';
+  
+      fields.forEach(field => {
+        if (field.type === 'select') {
+          content.innerHTML += `
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">${field.label}</label>
+              <select id="field_${field.name}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring focus:border-blue-500">
+                ${field.options.map(opt => `<option value="${opt}" ${opt === 'dhcp' ? 'selected' : ''}>${opt}</option>`).join('')}
+              </select>
+            </div>`;
+        } else {
+          content.innerHTML += `
+            <div class="field-container" data-for="${field.name}" style="display: ${['ip', 'gateway', 'dns'].includes(field.name) ? 'none' : 'block'};">
+              <label class="block text-sm font-medium text-gray-700 mb-2">${field.label}</label>
+              <input type="${field.type || 'text'}" id="field_${field.name}" placeholder="${field.placeholder || ''}"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring focus:border-blue-500">
+            </div>`;
+        }
+      });
+  
+      document.getElementById('inputModal').classList.remove('hidden');
+      document.getElementById('inputModal').classList.add('flex');
+  
+      // Live show/hide static IP fields if 'mode' changes
+      const modeSelect = document.getElementById('field_mode');
+      if (modeSelect) {
+        modeSelect.addEventListener('change', () => {
+          const isStatic = modeSelect.value === 'static';
+          document.querySelectorAll('[data-for="ip"], [data-for="gateway"], [data-for="dns"]').forEach(el => {
+            el.style.display = isStatic ? 'block' : 'none';
+          });
+        });
       }
     });
-
-    document.getElementById('inputModal').classList.remove('hidden');
-    document.getElementById('inputModal').classList.add('flex');
-
-    // Special live change handling for mode select
-    const modeSelect = document.getElementById('field_mode');
-    if (modeSelect) {
-      modeSelect.addEventListener('change', () => {
-        const isStatic = modeSelect.value === 'static';
-        document.querySelectorAll('[data-for="ip"], [data-for="gateway"], [data-for="dns"]').forEach(el => {
-          el.style.display = isStatic ? 'block' : 'none';
-        });
-      });
+  }
+  
+  function closeModal() {
+    document.getElementById('inputModal').classList.add('hidden');
+    document.getElementById('inputModal').classList.remove('flex');
+    modalResolve(null);
+  }
+  
+  function submitModal() {
+    const inputs = document.querySelectorAll('#modalContent input, #modalContent select');
+    const values = {};
+    inputs.forEach(input => {
+      values[input.id.replace('field_', '')] = input.value;
+    });
+    closeModal();
+    modalResolve(values);
+  }
+  
+  async function connectWifi(ssid, secure) {
+    let modalFields = [];
+  
+    if (secure) {
+      modalFields.push({ label: `Password for '${ssid}'`, name: "password", placeholder: "Enter Wi-Fi password", type: "password" });
     }
-  });
-}
-
-
-function closeModal() {
-  document.getElementById('inputModal').classList.add('hidden');
-  document.getElementById('inputModal').classList.remove('flex');
-  modalResolve(null);
-}
-
-function submitModal() {
-  const inputs = document.querySelectorAll('#modalContent input, #modalContent select');
-  const values = {};
-  inputs.forEach(input => {
-    values[input.id.replace('field_', '')] = input.value;
-  });
-  closeModal();
-  modalResolve(values);
-}
-
-async function toggleWifi() {
-  await fetch("/ws/net_wifi", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "toggle_wifi" }) });
-  loadWifiSettings();
-}
-
-async function loadWifiSettings() {
-  const res = await fetch("/ws/net_wifi");
-  const data = await res.json();
-  const container = document.getElementById('wifiNetworks');
-  const connectingSsid = data.connecting_ssid;
-  container.innerHTML = '';
-
-  if (!data.has_wifi) {
-    container.innerHTML = '<div class="p-6 border rounded-xl text-center text-gray-500">No Wi-Fi device found.</div>';
-    return;
-  }
-  if (!data.wifi_enabled) {
-    container.innerHTML = '<div class="p-6 border rounded-xl text-center text-gray-500">Wi-Fi is disabled.</div>';
-    return;
-  }
-  if (data.networks.length === 0) {
-    container.innerHTML = '<div class="p-6 border rounded-xl text-center text-gray-500">No networks available.</div>';
-    return;
-  }
-
-  for (const net of data.networks) {
-    let badge = `<span class="ml-2 bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">Disconnected</span>`;
-    if (net.connected) {
-      badge = `<span class="ml-2 bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">Connected</span>`;
-    } else if (connectingSsid && net.ssid === connectingSsid) {
-      badge = `<span class="ml-2 bg-yellow-100 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">Connecting...</span>`;
-    }
-    const button = net.connected
-      ? `<button onclick="disconnectWifi('${net.ssid}')" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 shadow">Disconnect</button>`
-      : `<button onclick="connectWifi('${net.ssid}', ${net.secure})" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow">Connect</button>`;
-
-    container.innerHTML += `
-      <div class="flex justify-between items-center p-6 bg-white rounded-xl shadow hover:shadow-md transition">
-        <div>
-          <div class="flex items-center text-lg font-semibold text-gray-800">${net.ssid} ${badge}</div>
-          <div class="text-sm text-gray-500 mt-1">${net.secure ? "Secure" : "Open"} | Signal Strength: ${net.signal}%</div>
-        </div>
-        <div class="ml-4">${button}</div>
-      </div>`;
-  }
-}
-
-async function connectWifi(ssid, secure) {
-  let modalFields = [];
-
-  if (secure) {
-    modalFields.push({ label: `Password for '${ssid}'`, name: "password", placeholder: "Enter Wi-Fi password", type: "password" });
-  }
-
-  modalFields.push({ label: "Connection Mode", name: "mode", type: "select", options: ["dhcp", "static"] });
-  modalFields.push({ label: "Static IP", name: "ip", placeholder: "192.168.1.100" });
-  modalFields.push({ label: "Gateway", name: "gateway", placeholder: "192.168.1.1" });
-  modalFields.push({ label: "DNS", name: "dns", placeholder: "8.8.8.8" });
-
-  const input = await openModal("Wi-Fi Connection Details", modalFields);
-  if (!input) return;
-
-  const password = input.password || null;
-  const useDhcp = input.mode === 'dhcp';
-
-  const staticConfig = useDhcp ? {} : {
-    ip: input.ip,
-    gateway: input.gateway,
-    dns: input.dns
-  };
-
-  // Update UI instantly
-  const container = document.getElementById('wifiNetworks');
-  const networkItems = container.querySelectorAll('div.flex.justify-between');
-
-  networkItems.forEach(item => {
-    const title = item.querySelector('div.flex.items-center.text-lg.font-semibold');
-    if (title && title.innerText.trim().startsWith(ssid)) {
-      const badge = title.querySelector('span');
-      if (badge) {
-        badge.innerText = "Connecting...";
-        badge.className = "ml-2 bg-yellow-100 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full";
+  
+    modalFields.push({ label: "Connection Mode", name: "mode", type: "select", options: ["dhcp", "static"] });
+    modalFields.push({ label: "Static IP", name: "ip", placeholder: "192.168.1.100" });
+    modalFields.push({ label: "Gateway", name: "gateway", placeholder: "192.168.1.1" });
+    modalFields.push({ label: "DNS", name: "dns", placeholder: "8.8.8.8" });
+  
+    const input = await openModal("Wi-Fi Connection Details", modalFields);
+    if (!input) return;
+  
+    const password = input.password || null;
+    const useDhcp = input.mode === 'dhcp';
+    const staticConfig = useDhcp ? {} : { ip: input.ip, gateway: input.gateway, dns: input.dns };
+  
+    // Update UI instantly
+    const container = document.getElementById('wifiNetworks');
+    const networkItems = container.querySelectorAll('div.flex.justify-between');
+  
+    networkItems.forEach(item => {
+      const title = item.querySelector('div.flex.items-center.text-lg.font-semibold');
+      if (title && title.innerText.trim().startsWith(ssid)) {
+        const badge = title.querySelector('span');
+        if (badge) {
+          badge.innerText = "Connecting...";
+          badge.className = "ml-2 bg-yellow-100 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full";
+        }
       }
+    });
+  
+    const res = await fetch("/ws/net_wifi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "connect", ssid, password, use_dhcp: useDhcp, static_config: staticConfig })
+    });
+  
+    const result = await res.json();
+  
+    if (result.status === "connected") {
+      alert("Connected successfully!");
+    } else {
+      alert("Failed to connect. Please check password or settings.");
     }
-  });
-
-  const res = await fetch("/ws/net_wifi", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "connect",
-      ssid,
-      password,
-      use_dhcp: useDhcp,
-      static_config: staticConfig
-    })
-  });
-
-  const result = await res.json();
-
-  if (result.status === "connected") {
-    alert("Connected successfully!");
-  } else {
-    alert("Failed to connect. Please check password or settings.");
+  
+    loadWifiSettings();
   }
-
-  loadWifiSettings();
-}
-
-
-async function disconnectWifi(ssid) {
-  await fetch("/ws/net_wifi", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "disconnect", ssid })
-  });
-  loadWifiSettings();
-}
-
-async function loadEthernetSettings() {
-  const res = await fetch("/ws/net_ethernet");
-  const data = await res.json();
-  const container = document.getElementById('ethernetInterfaces');
-  container.innerHTML = '';
-
-  for (const iface of data.interfaces) {
-    container.innerHTML += `
-      <div class="flex justify-between items-center p-6 bg-white rounded-xl shadow hover:shadow-md transition">
-        <div class="text-lg font-semibold text-gray-800">${iface}</div>
-        <div class="flex gap-3">
-          <button onclick="setEthernetDhcp('${iface}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow">Set DHCP</button>
-          <button onclick="setEthernetStatic('${iface}')" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">Set Static</button>
-        </div>
-      </div>`;
+  
+  async function setEthernetStatic(iface) {
+    const input = await openModal("Ethernet Configuration", [
+      { label: "Connection Mode", name: "mode", type: "select", options: ["dhcp", "static"] },
+      { label: "Static IP", name: "ip", placeholder: "192.168.1.200" },
+      { label: "Gateway", name: "gateway", placeholder: "192.168.1.1" },
+      { label: "DNS", name: "dns", placeholder: "8.8.8.8" }
+    ]);
+    if (!input) return;
+  
+    const useDhcp = input.mode === 'dhcp';
+    const staticConfig = useDhcp ? {} : { ip: input.ip, gateway: input.gateway, dns: input.dns };
+  
+    await fetch("/ws/net_ethernet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: useDhcp ? "set_dhcp" : "set_static", iface, static_config: staticConfig })
+    });
+    loadEthernetSettings();
   }
-}
-
-async function setEthernetDhcp(iface) {
-  await fetch("/ws/net_ethernet", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "set_dhcp", iface })
-  });
-  loadEthernetSettings();
-}
-
-async function setEthernetStatic(iface) {
-  const config = await openModal("Static Ethernet Config", [
-    { label: "Static IP", name: "ip", placeholder: "192.168.1.200" },
-    { label: "Gateway", name: "gateway", placeholder: "192.168.1.1" },
-    { label: "DNS", name: "dns", placeholder: "8.8.8.8" }
-  ]);
-  if (!config) return;
-
-  await fetch("/ws/net_ethernet", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "set_static", iface, static_config: config })
-  });
-  loadEthernetSettings();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  loadWifiSettings();
-  loadEthernetSettings();
-  setInterval(loadWifiSettings, 5000);
-});
-</script>
+  </script>
+  
 {% endblock %}

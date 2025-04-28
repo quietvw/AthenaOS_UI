@@ -146,24 +146,28 @@ def net_wifi():
                 connecting_ssid = ssid  # Mark SSID as connecting
 
                 run_cmd(["nmcli", "connection", "delete", ssid])
+
                 connect_cmd = ["nmcli", "device", "wifi", "connect", ssid]
                 if password:
                     connect_cmd += ["password", password]
-                else:
-                    connect_cmd += ["--", "no-password"]
                 output = run_cmd(connect_cmd)
 
                 if not use_dhcp and static_config:
-                    run_cmd(["nmcli", "con", "mod", ssid,
-                             "ipv4.addresses", static_config["ip"],
-                             "ipv4.gateway", static_config["gateway"],
-                             "ipv4.dns", static_config["dns"],
-                             "ipv4.method", "manual"])
+                    run_cmd([
+                        "nmcli", "con", "mod", ssid,
+                        "ipv4.addresses", static_config["ip"],
+                        "ipv4.gateway", static_config["gateway"],
+                        "ipv4.dns", static_config["dns"],
+                        "ipv4.method", "manual"
+                    ])
+                    run_cmd(["nmcli", "con", "up", ssid])
+                else:
+                    run_cmd(["nmcli", "con", "mod", ssid, "ipv4.method", "auto"])
                     run_cmd(["nmcli", "con", "up", ssid])
 
-                time.sleep(3)  # Give it a second to try to connect
-                connected = check_internet()
+                time.sleep(3)  # Give it a second to connect
 
+                connected = check_internet()
                 connecting_ssid = None  # Clear connecting SSID
 
                 if connected:
