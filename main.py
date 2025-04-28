@@ -12,7 +12,7 @@ upgrade_log = []
 upgrading_to_commit = None
 
 app = Flask(__name__, static_folder="dist/static", template_folder="dist")
-
+current_connecting_ssid = None
 weather_cache = {
     "date": None,
     "data": {}
@@ -126,7 +126,7 @@ def background_wifi_scanner():
 scanner_thread = threading.Thread(target=background_wifi_scanner, daemon=True)
 scanner_thread.start()
 
-current_connecting_ssid = None
+
 
 @app.route("/ws/net_wifi", methods=["GET", "POST"])
 def net_wifi():
