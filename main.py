@@ -17,17 +17,25 @@ weather_cache = {
     "date": None,
     "data": {}
 }
+wifi_networks_cache = []
+connecting_ssid = None  # New: Track connecting SSID
+
 def run_cmd(cmd):
     """Run shell command safely."""
     try:
-        return subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
+        print(f"Running command: {' '.join(cmd)}")
+        return subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode().strip()
+    except subprocess.CalledProcessError as e:
+        print(f"Command failed {cmd}: {e.output.decode().strip()}")
+        return ""
     except Exception as e:
         print(f"Command failed {cmd}: {e}")
         return ""
 
 def check_internet():
     """Ping Google DNS to verify internet connectivity."""
-    return subprocess.run(["ping", "-c", "1", "-W", "1", "8.8.8.8"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+    return subprocess.run(["ping", "-c", "1", "-W", "1", "8.8.8.8"],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
 
 def get_all_interfaces():
     """Get all interfaces excluding loopback."""
@@ -74,19 +82,16 @@ def scan_wifi_networks():
         output = run_cmd([
             "nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"
         ])
-        print(f"Wi-Fi list output:\n{output}")
 
         ssid_map = {}
         lines = output.splitlines()
 
         for line in lines:
-            print(f"Parsed terse line: {line}")
             parts = line.split(":")
             if len(parts) >= 4:
                 in_use, ssid, signal, security = parts[:4]
                 ssid = ssid.strip()
 
-                # Skip hidden SSIDs
                 if not ssid:
                     continue
 
@@ -97,7 +102,6 @@ def scan_wifi_networks():
                     "connected": in_use.strip() == "*"
                 }
 
-                # If we already saw this SSID, prefer the connected one
                 if ssid in ssid_map:
                     existing = ssid_map[ssid]
                     if not existing["connected"] and network["connected"]:
@@ -108,28 +112,24 @@ def scan_wifi_networks():
                 else:
                     ssid_map[ssid] = network
 
-        # Sort the final list by signal strength
         return sorted(ssid_map.values(), key=lambda x: x['signal'], reverse=True)
 
     except Exception as e:
         print(f"Wi-Fi scan failed: {e}")
         return []
 
-
 def background_wifi_scanner():
     global wifi_networks_cache
     while True:
         wifi_networks_cache = scan_wifi_networks()
-        time.sleep(5)  # scan every 5 seconds
+        time.sleep(5)
 
-# Start background scanning
 scanner_thread = threading.Thread(target=background_wifi_scanner, daemon=True)
 scanner_thread.start()
 
-
-
 @app.route("/ws/net_wifi", methods=["GET", "POST"])
 def net_wifi():
+    global connecting_ssid
     try:
         if request.method == "POST":
             action = request.json.get("action")
@@ -144,14 +144,20 @@ def net_wifi():
                 use_dhcp = request.json.get("use_dhcp", True)
                 static_config = request.json.get("static_config", {})
 
-              
+                connecting_ssid = ssid
                 run_cmd(["nmcli", "connection", "delete", ssid])
+
                 connect_cmd = ["nmcli", "device", "wifi", "connect", ssid]
                 if password:
                     connect_cmd += ["password", password]
                 else:
                     connect_cmd += ["--", "no-password"]
-                run_cmd(connect_cmd)
+
+                output = run_cmd(connect_cmd)
+
+                if "successfully activated" not in output.lower():
+                    connecting_ssid = None
+                    return jsonify({"status": "failed"}), 500
 
                 if not use_dhcp and static_config:
                     run_cmd(["nmcli", "con", "mod", ssid,
@@ -161,6 +167,7 @@ def net_wifi():
                              "ipv4.method", "manual"])
                     run_cmd(["nmcli", "con", "up", ssid])
 
+                connecting_ssid = None
                 return jsonify({"status": "connected"})
 
             elif action == "disconnect":
@@ -168,22 +175,16 @@ def net_wifi():
                 run_cmd(["nmcli", "con", "down", "id", ssid])
                 return jsonify({"status": "disconnected"})
 
-        # Always return the cached network list for GET
         return jsonify({
             "has_wifi": has_wifi_device(),
             "wifi_enabled": wifi_enabled(),
-            "networks": wifi_networks_cache
+            "networks": wifi_networks_cache,
+            "connecting_ssid": connecting_ssid
         })
 
     except Exception as e:
+        print(f"Wi-Fi handler failed: {e}")
         return jsonify({"error": str(e)}), 500
-
-# Start background scanning
-scanner_thread = threading.Thread(target=background_wifi_scanner, daemon=True)
-scanner_thread.start()
-
-
-
 
 @app.route("/ws/net_ethernet", methods=["GET", "POST"])
 def net_ethernet():
@@ -213,6 +214,7 @@ def net_ethernet():
         return jsonify({"interfaces": interfaces})
 
     except Exception as e:
+        print(f"Ethernet handler failed: {e}")
         return jsonify({"error": str(e)}), 500
 
 
