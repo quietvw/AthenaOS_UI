@@ -126,6 +126,8 @@ def background_wifi_scanner():
 scanner_thread = threading.Thread(target=background_wifi_scanner, daemon=True)
 scanner_thread.start()
 
+current_connecting_ssid = None
+
 @app.route("/ws/net_wifi", methods=["GET", "POST"])
 def net_wifi():
     try:
@@ -142,9 +144,13 @@ def net_wifi():
                 use_dhcp = request.json.get("use_dhcp", True)
                 static_config = request.json.get("static_config", {})
 
+                current_connecting_ssid = ssid  # mark connecting
+                run_cmd(["nmcli", "connection", "delete", ssid])
                 connect_cmd = ["nmcli", "device", "wifi", "connect", ssid]
                 if password:
                     connect_cmd += ["password", password]
+                else:
+                    connect_cmd += ["--", "no-password"]
                 run_cmd(connect_cmd)
 
                 if not use_dhcp and static_config:
@@ -166,7 +172,8 @@ def net_wifi():
         return jsonify({
             "has_wifi": has_wifi_device(),
             "wifi_enabled": wifi_enabled(),
-            "networks": wifi_networks_cache
+            "networks": wifi_networks_cache,
+            "connecting_ssid": current_connecting_ssid
         })
 
     except Exception as e:
