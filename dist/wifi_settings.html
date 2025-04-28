@@ -128,7 +128,7 @@ async function connectWifi(ssid, secure) {
   let password = null;
   if (secure) {
     const input = await openModal("Wi-Fi Password", [
-      { label: `Password for '${ssid}'`, name: "password", placeholder: "Enter Wi-Fi password", type: "password" }
+      { label: `Password for '${ssid}'`, name: "password", placeholder: "Enter Wi-Fi password" }
     ]);
     if (!input) return;
     password = input.password;
@@ -149,6 +149,27 @@ async function connectWifi(ssid, secure) {
     if (!config) return;
     staticConfig = config;
   }
+
+  // Show "Connecting..." badge immediately
+  const container = document.getElementById('wifiNetworks');
+  container.innerHTML = '<div class="p-6 border rounded-xl text-center text-gray-500">Connecting to network...</div>';
+
+  const res = await fetch("/ws/net_wifi", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "connect", ssid, password, use_dhcp: useDhcp, static_config: staticConfig })
+  });
+
+  const result = await res.json();
+
+  if (result.status === "connected") {
+    alert("Connected successfully!");
+  } else if (result.status === "failed") {
+    alert("Failed to connect. Please check password or network settings.");
+  }
+
+  loadWifiSettings(); // Refresh networks
+}
 
   await fetch("/ws/net_wifi", {
     method: "POST",

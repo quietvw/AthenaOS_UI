@@ -126,7 +126,6 @@ def background_wifi_scanner():
 
 scanner_thread = threading.Thread(target=background_wifi_scanner, daemon=True)
 scanner_thread.start()
-
 @app.route("/ws/net_wifi", methods=["GET", "POST"])
 def net_wifi():
     global connecting_ssid
@@ -144,20 +143,15 @@ def net_wifi():
                 use_dhcp = request.json.get("use_dhcp", True)
                 static_config = request.json.get("static_config", {})
 
-                connecting_ssid = ssid
-                run_cmd(["nmcli", "connection", "delete", ssid])
+                connecting_ssid = ssid  # Mark SSID as connecting
 
+                run_cmd(["nmcli", "connection", "delete", ssid])
                 connect_cmd = ["nmcli", "device", "wifi", "connect", ssid]
                 if password:
                     connect_cmd += ["password", password]
                 else:
                     connect_cmd += ["--", "no-password"]
-
                 output = run_cmd(connect_cmd)
-
-                if "successfully activated" not in output.lower():
-                    connecting_ssid = None
-                    return jsonify({"status": "failed"}), 500
 
                 if not use_dhcp and static_config:
                     run_cmd(["nmcli", "con", "mod", ssid,
@@ -167,14 +161,22 @@ def net_wifi():
                              "ipv4.method", "manual"])
                     run_cmd(["nmcli", "con", "up", ssid])
 
-                connecting_ssid = None
-                return jsonify({"status": "connected"})
+                time.sleep(3)  # Give it a second to try to connect
+                connected = check_internet()
+
+                connecting_ssid = None  # Clear connecting SSID
+
+                if connected:
+                    return jsonify({"status": "connected"})
+                else:
+                    return jsonify({"status": "failed"})
 
             elif action == "disconnect":
                 ssid = request.json.get("ssid")
                 run_cmd(["nmcli", "con", "down", "id", ssid])
                 return jsonify({"status": "disconnected"})
 
+        # Always return the cached network list for GET
         return jsonify({
             "has_wifi": has_wifi_device(),
             "wifi_enabled": wifi_enabled(),
@@ -183,7 +185,7 @@ def net_wifi():
         })
 
     except Exception as e:
-        print(f"Wi-Fi handler failed: {e}")
+        connecting_ssid = None  # Clear on error
         return jsonify({"error": str(e)}), 500
 
 @app.route("/ws/net_ethernet", methods=["GET", "POST"])
