@@ -128,15 +128,20 @@ async function connectWifi(ssid, secure) {
   let password = null;
   if (secure) {
     const input = await openModal("Wi-Fi Password", [
-      { label: `Password for '${ssid}'`, name: "password", placeholder: "Enter Wi-Fi password" }
+      { label: `Password for '${ssid}'`, name: "password", placeholder: "Enter Wi-Fi password" },
+      { label: "Connection Mode (dhcp or static)", name: "mode", placeholder: "dhcp" }
     ]);
     if (!input) return;
     password = input.password;
+    var mode = input.mode || "dhcp";
+  } else {
+    const input = await openModal("Connection Mode", [
+      { label: "Connection Mode (dhcp or static)", name: "mode", placeholder: "dhcp" }
+    ]);
+    if (!input) return;
+    var mode = input.mode || "dhcp";
   }
 
-  const { mode } = await openModal("Connection Mode", [
-    { label: "Type 'dhcp' or 'static'", name: "mode", placeholder: "dhcp or static" }
-  ]);
   const useDhcp = mode.trim().toLowerCase() === 'dhcp';
 
   let staticConfig = {};
@@ -150,9 +155,21 @@ async function connectWifi(ssid, secure) {
     staticConfig = config;
   }
 
-  // Show "Connecting..." badge immediately
+  // 🔥 Instead of clearing the whole #wifiNetworks, 
+  // just mark that SSID as "Connecting..."
   const container = document.getElementById('wifiNetworks');
-  container.innerHTML = '<div class="p-6 border rounded-xl text-center text-gray-500">Connecting to network...</div>';
+  const networkItems = container.querySelectorAll('div.flex.justify-between');
+
+  networkItems.forEach(item => {
+    const title = item.querySelector('div.flex.items-center.text-lg.font-semibold');
+    if (title && title.innerText.trim().startsWith(ssid)) {
+      const badge = title.querySelector('span');
+      if (badge) {
+        badge.innerText = "Connecting...";
+        badge.className = "ml-2 bg-yellow-100 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full";
+      }
+    }
+  });
 
   const res = await fetch("/ws/net_wifi", {
     method: "POST",
@@ -170,6 +187,7 @@ async function connectWifi(ssid, secure) {
 
   loadWifiSettings(); // Refresh networks
 }
+
 
 
 
