@@ -12,7 +12,7 @@ upgrade_log = []
 upgrading_to_commit = None
 
 app = Flask(__name__, static_folder="dist/static", template_folder="dist")
-current_connecting_ssid = None
+
 weather_cache = {
     "date": None,
     "data": {}
@@ -144,7 +144,7 @@ def net_wifi():
                 use_dhcp = request.json.get("use_dhcp", True)
                 static_config = request.json.get("static_config", {})
 
-                current_connecting_ssid = ssid  # mark connecting
+              
                 run_cmd(["nmcli", "connection", "delete", ssid])
                 connect_cmd = ["nmcli", "device", "wifi", "connect", ssid]
                 if password:
@@ -172,8 +172,7 @@ def net_wifi():
         return jsonify({
             "has_wifi": has_wifi_device(),
             "wifi_enabled": wifi_enabled(),
-            "networks": wifi_networks_cache,
-            "connecting_ssid": current_connecting_ssid
+            "networks": wifi_networks_cache
         })
 
     except Exception as e:
