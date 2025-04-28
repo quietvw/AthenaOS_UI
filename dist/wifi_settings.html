@@ -171,14 +171,7 @@ async function connectWifi(ssid, secure) {
   loadWifiSettings(); // Refresh networks
 }
 
-  await fetch("/ws/net_wifi", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "connect", ssid, password, use_dhcp: useDhcp, static_config: staticConfig })
-  });
 
-  loadWifiSettings();
-}
 
 async function disconnectWifi(ssid) {
   await fetch("/ws/net_wifi", {
